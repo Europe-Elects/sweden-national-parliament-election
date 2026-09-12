@@ -137,7 +137,7 @@
         {
           "label": "SVT/VALU · popular vote",
           "id": "pd7UM",
-          "version": 1,
+          "version": 2,
           "height": 397,
           "ariaLabel": "Line chart",
           "live": true
@@ -145,7 +145,7 @@
         {
           "label": "SVT/VALU · seats",
           "id": "sskUD",
-          "version": 1,
+          "version": 2,
           "height": 397,
           "ariaLabel": "Line chart",
           "live": true
