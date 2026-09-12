@@ -369,6 +369,35 @@ test('minValidVotes does not suppress a real count', () => {
   assert.strictEqual(out.counting, true);
   assert.strictEqual(out.validVotes, 4210000);
 });
+test('an identical vote figure across parties is a placeholder, whatever the formatting', () => {
+  /* The case a percent rule cannot see: strip the % and every party holds 1. */
+  const out = buildResults(resultRows(
+    '"CDU","1","17.23","1","-29.30","-106"',
+    '"GRÜNE","1","1.17","1","-4.10","-17"',
+    '"CD&V","1","8.56","1","-18.10","-67"'
+  ), { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes' });
+  assert.strictEqual(out.counting, false);
+  for (const p of out.parties) assert.strictEqual(p.reported, false);
+});
+test('genuinely different counts are left alone', () => {
+  const out = buildResults(resultRows(
+    '"CDU","1284302","30.50","12","-6.60","-3"',
+    '"GRÜNE","410221","9.74","4","-1.10","-1"',
+    '"CD&V","820114","19.48","8","0.40","1"',
+    '"Valid votes","4210000","","","",""'
+  ), { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes' });
+  assert.strictEqual(out.counting, true);
+  assert.strictEqual(out.parties.length, 3);
+});
+test('two parties on the same figure is not treated as a placeholder', () => {
+  /* A genuine tie in a small field must not suppress the tab. */
+  const out = buildResults(resultRows(
+    '"CDU","5000","50.00","1","0","0"',
+    '"GRÜNE","5000","50.00","1","0","0"',
+    '"Valid votes","10000","","","",""'
+  ), { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes' });
+  assert.strictEqual(out.counting, true);
+});
 test('a results tab with no seat column still works', () => {
   const out = buildResults(resultRows('"CDU","1000","30.5","","",""'), {
     index: INDEX, columns: { votes: 1, share: 2, seats: null, changeVotes: null, changeSeats: null }, totalRowPattern: 'valid votes',

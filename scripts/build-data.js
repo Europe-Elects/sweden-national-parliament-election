@@ -183,6 +183,52 @@ function buildResults(rows, { index, columns, totalRowPattern, seatsTotal, votes
   const totalShare = parties.reduce((a, p) => a + (p.share || 0), 0);
   if (totalShare > 105) throw new Error(`vote shares sum to ${totalShare}`);
 
+  /* Structural checks, which hold whatever the cells are formatted as.
+
+     They are deliberately split by how certain they are. Suppressing real
+     figures on election night is worse than showing placeholder ones before it,
+     so only a signal with essentially no false positives is allowed to
+     suppress; the rest merely say something is off and leave the figures
+     alone. */
+  const counted = parties.filter(p => p.reported);
+
+  /* Eight parties never poll the same number of votes. This is what a
+     hand-typed placeholder looks like once formatting is stripped away, and it
+     is the check that catches the case a percent sign would have hidden. */
+  let allEqual = false;
+  if (!asShare && counted.length >= 3) {
+    const first = counted[0].votes;
+    allEqual = counted.every(p => p.votes === first);
+    if (allEqual) {
+      for (const p of counted) { p.reported = false; p.votes = null; p.share = null; p.seats = null; p.changeV = null; p.changeS = null; }
+      console.warn(
+        `  WARNING: all ${counted.length} reporting parties hold the same vote figure (${first}), which is a placeholder, ` +
+        `not a count. Treating the tab as not yet counting.`
+      );
+    }
+  }
+
+  /* Only advisory: a returning officer's valid-vote base does not always match
+     the sum of party votes exactly, and early in a count the sheet's own
+     arithmetic can lag. Worth saying, not worth acting on. */
+  const stillCounted = parties.filter(p => p.reported);
+  if (stillCounted.length && validVotes > 0) {
+    const sum = stillCounted.reduce((a, p) => a + (p.votes || 0), 0);
+    if (sum > 0 && Math.abs(sum - validVotes) / validVotes > 0.02) {
+      console.warn(`  note: party votes sum to ${sum} but the totals row says ${validVotes} — a gap over 2%`);
+    }
+    const offenders = stillCounted.filter(p => {
+      if (p.share == null || !p.votes) return false;
+      return Math.abs(p.share - (p.votes / validVotes) * 100) > 5;
+    });
+    if (offenders.length > stillCounted.length / 2) {
+      console.warn(
+        `  note: the share column disagrees with votes/total for ${offenders.length} of ${stillCounted.length} parties ` +
+        `by more than 5 points — check which of the two columns is authoritative`
+      );
+    }
+  }
+
   const unmatched = parties.filter(p => !p.code).map(p => p.label);
   if (unmatched.length) {
     console.warn(`  note: no party matches ${unmatched.map(l => `"${l}"`).join(', ')} — they will show as Others. Add an alias in config.json under parties.overrides if that is wrong.`);
