@@ -16,7 +16,7 @@
 */
 
 const { loadConfig } = require('./lib/config');
-const { collectCharts } = require('./lib/charts');
+const { collectCharts, datawrapperApiBase } = require('./lib/charts');
 
 const errors = [];
 const warnings = [];
@@ -204,39 +204,61 @@ async function checkChartSources(config) {
   const charts = collectCharts(config).filter(c => !/^TODO/i.test(c.id));
   if (!charts.length) return;
   const sheetId = (config.sheet && config.sheet.id) || '';
+  const token = process.env.DATAWRAPPER_TOKEN;
   console.log('\nChart data sources');
 
+  if (!token) {
+    /* Scraping the published bundle for the dataset URL does not work: the URL
+       often lives in a JS chunk the page loads separately, so its absence from
+       the HTML proves nothing. An earlier version of this check reported it as
+       an error and cried wolf on charts that were correctly linked. The API is
+       the only authoritative answer, so without a token this says nothing
+       rather than something wrong. */
+    warn('DATAWRAPPER_TOKEN is not set, so chart data sources could not be checked. Set it and re-run — this is the check that catches a chart still reading the previous election\'s Sheet.');
+    return;
+  }
+
+  const apiBase = datawrapperApiBase(config);
   for (const chart of charts) {
     const where = `${chart.section} · ${chart.id}`;
-    let html;
+    let body;
     try {
-      const res = await fetch(`https://datawrapper.dwcdn.net/${chart.id}/${chart.version || 1}/`);
-      if (!res.ok) { err(`${where} returned HTTP ${res.status} — check the id and version`); continue; }
-      html = await res.text();
+      const res = await fetch(`${apiBase}/charts/${chart.id}`, { headers: { Authorization: `Bearer ${token}` } });
+      if (!res.ok) { err(`${where}: GET /charts/${chart.id} returned HTTP ${res.status}`); continue; }
+      body = await res.json();
     } catch (e) {
-      warn(`${where} could not be fetched: ${e.message}`);
+      warn(`${where} could not be read from the API: ${e.message}`);
       continue;
     }
 
-    const m = html.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)\/(?:export|gviz)[^"'\\]*/);
-    if (!m) {
-      const msg = `${where} has no linked dataset — its data was uploaded as a file, so it is frozen at publish time and will never update`;
+    /* The version in the embed URL is the one readers get. Republishing makes a
+       new one, so a config pinned to an older version keeps serving that older
+       render however many times the chart is updated. */
+    const live = body.publicVersion;
+    if (live != null && Number(chart.version) !== Number(live)) {
+      err(`${where} is pinned to version ${chart.version} but the chart is published at version ${live}. The page is serving the older render.`);
+    }
+
+    const d = (body.metadata && body.metadata.data) || {};
+    const url = typeof d['external-data'] === 'string' ? d['external-data']
+              : typeof d.externalData === 'string' ? d.externalData : null;
+
+    if (!url) {
+      const msg = `${where} has no linked dataset — its data is an uploaded file, frozen at publish time`;
       (chart.live ? err : warn)(chart.live
-        ? `${msg}. It is marked live: true, so the pipeline republishes it pointlessly. Fix it in Datawrapper: Upload data -> Link external dataset.`
-        : `${msg}. That is fine for a static chart.`);
+        ? `${msg}. Fix it in Datawrapper: Upload data -> Link external dataset.`
+        : `${msg}. Fine for a static chart.`);
       continue;
     }
 
-    const tab = (m[0].match(/gid=\d+|sheet=[^&]*/) || ['no tab parameter'])[0];
-    if (m[1] === sheetId) {
-      console.log(`  ok: ${where} reads this election's Sheet (${tab})`);
+    const m = url.match(/spreadsheets\/d\/([A-Za-z0-9_-]+)/);
+    const tab = (url.match(/gid=\d+|sheet=[^&]*/) || ['no tab parameter'])[0];
+    if (m && m[1] === sheetId) {
+      console.log(`  ok: ${where} reads this election's Sheet (${tab}), version ${chart.version}`);
     } else {
-      const msg = `${where} reads a different spreadsheet (${m[1]}, ${tab})`;
-      /* A standing polling average or a previous election's breakdown lives in
-         its own sheet on purpose; a live chart pointing elsewhere is usually a
-         copy that was never repointed. */
+      const msg = `${where} reads ${m ? `a different spreadsheet (${m[1]}, ${tab})` : url}`;
       (chart.live ? err : warn)(chart.live
-        ? `${msg} while being marked live: true. A copied chart that still reads the previous election's Sheet looks fine until the numbers are wrong.`
+        ? `${msg} while marked live: true. A copied chart still reading the previous election's Sheet looks fine until the numbers are wrong.`
         : `${msg}. Expected for a chart maintained outside this page.`);
     }
   }

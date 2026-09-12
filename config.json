@@ -152,7 +152,7 @@
         {
           "label": "SVT/VALU",
           "id": "VMDOO",
-          "version": 2,
+          "version": 7,
           "height": 238,
           "ariaLabel": "Stacked Bars",
           "live": true
@@ -160,7 +160,7 @@
         {
           "label": "Novus (TV4)",
           "id": "fnm6Q",
-          "version": 1,
+          "version": 6,
           "height": 239,
           "ariaLabel": "Stacked Bars",
           "live": true
@@ -175,7 +175,7 @@
       "chart": {
         "label": "Demographic swing",
         "id": "onN18",
-        "version": 4,
+        "version": 9,
         "height": 627,
         "ariaLabel": "Arrow Plot",
         "live": true
@@ -213,7 +213,7 @@
       "chart": {
         "label": "Turnout",
         "id": "xr5Oj",
-        "version": 1,
+        "version": 6,
         "height": 369,
         "ariaLabel": "Line chart",
         "live": true
@@ -233,7 +233,7 @@
       "chart": {
         "label": "Electoral history",
         "id": "xsLw8",
-        "version": 3,
+        "version": 7,
         "height": 405,
         "ariaLabel": "Area Chart",
         "live": true
