@@ -221,8 +221,9 @@
         "version": 3,
         "height": 405,
         "ariaLabel": "Area Chart",
-        "live": false
-      }
+        "live": true
+      },
+      "_note": "live: true because this chart is linked to this election Sheet (gid 715802718), so its 2026 column moves during the count."
     },
     "pollingAverage": {
       "label": "Polling Average",

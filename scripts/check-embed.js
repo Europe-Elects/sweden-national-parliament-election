@@ -16,6 +16,7 @@
 */
 
 const { loadConfig } = require('./lib/config');
+const { collectCharts } = require('./lib/charts');
 
 const errors = [];
 const warnings = [];
@@ -177,6 +178,56 @@ function checkEmbed(body, config) {
   else err(`the post never mentions "${key}", so the iframe will not resize. The listener in the post and page.frameMessageKey must match.`);
 }
 
+/* Reads each configured chart's published bundle and reports what it actually
+   draws its data from.
+
+   This is the one thing nobody verifies by hand seven times, and it fails in
+   the worst way: a chart whose data was uploaded as a file rather than linked
+   to the Sheet looks completely normal and simply never updates, all evening,
+   with nothing anywhere reporting a fault. Republishing it does not help — the
+   data is baked in at publish time. */
+async function checkChartSources(config) {
+  const charts = collectCharts(config).filter(c => !/^TODO/i.test(c.id));
+  if (!charts.length) return;
+  const sheetId = (config.sheet && config.sheet.id) || '';
+  console.log('\nChart data sources');
+
+  for (const chart of charts) {
+    const where = `${chart.section} · ${chart.id}`;
+    let html;
+    try {
+      const res = await fetch(`https://datawrapper.dwcdn.net/${chart.id}/${chart.version || 1}/`);
+      if (!res.ok) { err(`${where} returned HTTP ${res.status} — check the id and version`); continue; }
+      html = await res.text();
+    } catch (e) {
+      warn(`${where} could not be fetched: ${e.message}`);
+      continue;
+    }
+
+    const m = html.match(/https:\/\/docs\.google\.com\/spreadsheets\/d\/([A-Za-z0-9_-]+)\/(?:export|gviz)[^"'\\]*/);
+    if (!m) {
+      const msg = `${where} has no linked dataset — its data was uploaded as a file, so it is frozen at publish time and will never update`;
+      (chart.live ? err : warn)(chart.live
+        ? `${msg}. It is marked live: true, so the pipeline republishes it pointlessly. Fix it in Datawrapper: Upload data -> Link external dataset.`
+        : `${msg}. That is fine for a static chart.`);
+      continue;
+    }
+
+    const tab = (m[0].match(/gid=\d+|sheet=[^&]*/) || ['no tab parameter'])[0];
+    if (m[1] === sheetId) {
+      console.log(`  ok: ${where} reads this election's Sheet (${tab})`);
+    } else {
+      const msg = `${where} reads a different spreadsheet (${m[1]}, ${tab})`;
+      /* A standing polling average or a previous election's breakdown lives in
+         its own sheet on purpose; a live chart pointing elsewhere is usually a
+         copy that was never repointed. */
+      (chart.live ? err : warn)(chart.live
+        ? `${msg} while being marked live: true. A copied chart that still reads the previous election's Sheet looks fine until the numbers are wrong.`
+        : `${msg}. Expected for a chart maintained outside this page.`);
+    }
+  }
+}
+
 async function checkPages(config) {
   const pagesUrl = config.page && config.page.pagesUrl;
   if (!pagesUrl || /^TODO/.test(pagesUrl)) return;
@@ -213,6 +264,7 @@ async function main() {
   }
 
   checkEmbed(body, config);
+  await checkChartSources(config);
   await checkPages(config);
 
   console.log('');
