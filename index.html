@@ -368,11 +368,17 @@ RENDER.results = cfg => band(cfg.label) + `<div class="card">
   <table id="resultsTable"></table>
 </div>`;
 
-RENDER.projections = cfg => {
-  const grid = embedGrid(cfg.charts);
-  if (!grid) return '';
-  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${grid}${note(cfg)}</div>`;
-};
+/* A section that only embeds Datawrapper charts needs no renderer of its own:
+   band, heading, embeds, footnote is the same shape every time. So a new one —
+   a polling average, a seat projection, a swing chart — can be added in
+   config.json alone, under any key, with no change here. */
+function renderEmbedSection(cfg){
+  const body = Array.isArray(cfg.charts) ? embedGrid(cfg.charts) : embed(cfg.chart);
+  if (!body) return '';
+  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${body}${note(cfg)}</div>`;
+}
+
+RENDER.projections = renderEmbedSection;
 
 RENDER.exitVotes = cfg => band(cfg.label) + `<div class="card">
   ${cardHead(cfg)}
@@ -385,11 +391,7 @@ RENDER.exitSeats = cfg => band(cfg.label) + `<div class="card">
   <div id="exitSeatsWrap"><div class="placeholder">Loading exit poll data…</div></div>
 </div>`;
 
-RENDER.turnout = cfg => {
-  const e = embed(cfg.chart);
-  if (!e) return '';
-  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${e}${note(cfg)}</div>`;
-};
+RENDER.turnout = renderEmbedSection;
 
 RENDER.previousResult = (cfg, after, content) => {
   const rows = (content && content.rows || []).filter(r => parseNum(r.votePercent) != null);
@@ -440,11 +442,7 @@ RENDER.headToHead = (cfg, after, content) => {
   </div>`;
 };
 
-RENDER.coalitions = cfg => {
-  const grid = embedGrid(cfg.charts);
-  if (!grid) return '';
-  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${grid}${note(cfg)}</div>`;
-};
+RENDER.coalitions = renderEmbedSection;
 
 RENDER.history = cfg => {
   const items = (cfg.charts || []).filter(c => c && c.id && !/^TODO/i.test(c.id));
@@ -1009,10 +1007,13 @@ async function boot(){
 
   let html = quickFacts();
   for (const name of names) {
-    const render = RENDER[name];
-    if (!render) { console.warn(`config.sections."${name}" has no renderer — ignored`); continue; }
+    const cfg = section(name);
+    /* An unrecognised key that carries charts is a Datawrapper-only section
+       someone added in config alone. That is supported on purpose. */
+    const render = RENDER[name] || ((cfg.chart || cfg.charts) ? renderEmbedSection : null);
+    if (!render) { console.warn(`config.sections."${name}" has no renderer and no charts — ignored`); continue; }
     try {
-      html += render(section(name), queue, CONTENT[name]);
+      html += render(cfg, queue, CONTENT[name]);
     } catch (e) {
       console.error(`section "${name}" failed to render:`, e);
     }

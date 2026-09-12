@@ -37,9 +37,16 @@ function partiesToken() {
   return process.env.PARTIESDATA_TOKEN || process.env.GITHUB_PAT || null;
 }
 
+/* `--local <path>` on any script that reads PartiesData, so they all behave the
+   same way rather than only fetch-parties.js honouring it. */
+function localFromArgv() {
+  const i = process.argv.indexOf('--local');
+  return (i !== -1 && process.argv[i + 1] && !process.argv[i + 1].startsWith('--')) ? process.argv[i + 1] : null;
+}
+
 /* A local checkout wins over the API: that is how this runs offline and without
    a token. */
-async function fetchPartiesYaml(source, { local, token = partiesToken() } = {}) {
+async function fetchPartiesYaml(source, { local = localFromArgv(), token = partiesToken() } = {}) {
   const localRoot = (local && local !== true) ? local : source.localPath;
   if (localRoot) {
     const file = path.join(localRoot, source.continent, 'partiesdata.yaml');

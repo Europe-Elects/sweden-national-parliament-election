@@ -1,0 +1,188 @@
+{
+  "updated": "2026-09-12T14:13:15.703Z",
+  "source": {
+    "repo": "Europe-Elects/PartiesData",
+    "ref": "main",
+    "continent": "Europe",
+    "country": "Sweden",
+    "electionType": "national parliament",
+    "localPath": null,
+    "url": "https://github.com/Europe-Elects/PartiesData/blob/main/Europe/partiesdata.yaml",
+    "resolved": true,
+    "electionData": {
+      "last_election_date": "2022",
+      "next_election_date": "13 September 2026"
+    }
+  },
+  "baselineSource": "partiesdata",
+  "order": [
+    "S",
+    "SD",
+    "M",
+    "V",
+    "C",
+    "KD",
+    "MP",
+    "L"
+  ],
+  "others": {
+    "code": "OTHERS",
+    "name": "Others",
+    "color": "#c7c4b8",
+    "dark": true
+  },
+  "parties": {
+    "S": {
+      "code": "S",
+      "key": "S",
+      "name": "S (S&D)",
+      "full": "S (S&D)",
+      "family": "Centre-left / Social Democrats",
+      "epGroup": "S&D",
+      "epGroupBase": "S&D",
+      "euro": "PES (S&D)",
+      "color": "#FF0000",
+      "dark": false,
+      "baseline": 30.3,
+      "gov": null,
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "s"
+      ]
+    },
+    "SD": {
+      "code": "SD",
+      "key": "SD",
+      "name": "SD (ECR)",
+      "full": "SD (ECR)",
+      "family": "National conservatism",
+      "epGroup": "ECR",
+      "epGroupBase": "ECR",
+      "euro": "ECR (ECR)",
+      "color": "#0000FF",
+      "dark": false,
+      "baseline": 20.5,
+      "gov": "Support",
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "sd"
+      ]
+    },
+    "M": {
+      "code": "M",
+      "key": "M",
+      "name": "M (EPP)",
+      "full": "M (EPP)",
+      "family": "Centre-right / Christian Democrats",
+      "epGroup": "EPP",
+      "epGroupBase": "EPP",
+      "euro": "EPP (EPP)",
+      "color": "#3399FF",
+      "dark": false,
+      "baseline": 19.1,
+      "gov": "Govt.",
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "m"
+      ]
+    },
+    "V": {
+      "code": "V",
+      "key": "V",
+      "name": "V (LEFT)",
+      "full": "V (LEFT)",
+      "family": "Left-wing / Left Socialists (PEL)",
+      "epGroup": "LEFT",
+      "epGroupBase": "LEFT",
+      "euro": "EL (LEFT)",
+      "color": "#990000",
+      "dark": false,
+      "baseline": 6.8,
+      "gov": null,
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "v"
+      ]
+    },
+    "KD": {
+      "code": "KD",
+      "key": "KD",
+      "name": "KD (EPP)",
+      "full": "KD (EPP)",
+      "family": "Centre-right / Christian Democrats",
+      "epGroup": "EPP",
+      "epGroupBase": "EPP",
+      "euro": "EPP (EPP)",
+      "color": "#1a5f9e",
+      "dark": false,
+      "baseline": 5.3,
+      "gov": "Govt.",
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "kd"
+      ]
+    },
+    "MP": {
+      "code": "MP",
+      "key": "MP",
+      "name": "MP (Greens/EFA)",
+      "full": "MP (Greens/EFA)",
+      "family": "Greens",
+      "epGroup": "Greens/EFA",
+      "epGroupBase": "Greens/EFA",
+      "euro": "EGP (Greens/EFA)",
+      "color": "#009900",
+      "dark": false,
+      "baseline": 5.1,
+      "gov": null,
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "mp"
+      ]
+    },
+    "L": {
+      "code": "L",
+      "key": "L",
+      "name": "L (RE)",
+      "full": "L (RE)",
+      "family": "Liberal",
+      "epGroup": "RE",
+      "epGroupBase": "RE",
+      "euro": "ALDE (RE)",
+      "color": "#c9a227",
+      "dark": true,
+      "baseline": 4.6,
+      "gov": "Govt.",
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "l"
+      ]
+    },
+    "C": {
+      "code": "C",
+      "key": "C",
+      "name": "C (RE)",
+      "full": "C (RE)",
+      "family": "Liberal",
+      "epGroup": "RE",
+      "epGroupBase": "RE",
+      "euro": "ALDE (RE)",
+      "color": "#FFD700",
+      "dark": true,
+      "baseline": 6.7,
+      "gov": null,
+      "inPrimary": true,
+      "via": "source",
+      "aliases": [
+        "c"
+      ]
+    }
+  }
+}
