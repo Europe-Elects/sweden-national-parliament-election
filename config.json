@@ -128,7 +128,30 @@
       "sub": "Every party in the Riksdag, with its European party affiliation. Official results and the change vs. 2022 populate after polls close.",
       "decimals": 2
     },
-    "_projectionsNote": "No projection charts supplied yet. Add a \"projections\" section with a `charts` array once the Datawrapper IDs exist.",
+    "projections": {
+      "label": "Projections",
+      "heading": "SVT/VALU · projections over time",
+      "sub": "A mix of exit poll and counted result, revised through the evening as the count proceeds",
+      "note": "These charts stay empty until the first projection at 20:00 CEST on 13 September 2026.",
+      "charts": [
+        {
+          "label": "SVT/VALU · popular vote",
+          "id": "pd7UM",
+          "version": 1,
+          "height": 397,
+          "ariaLabel": "Line chart",
+          "live": true
+        },
+        {
+          "label": "SVT/VALU · seats",
+          "id": "sskUD",
+          "version": 1,
+          "height": 397,
+          "ariaLabel": "Line chart",
+          "live": true
+        }
+      ]
+    },
     "exitVotes": {
       "label": "Exit Poll · Popular Vote",
       "heading": "Sweden 2026 · Exit poll, popular vote",
@@ -269,7 +292,8 @@
     "githubRepo": "Europe-Elects/sweden-national-parliament-election",
     "datawrapper": {
       "apiBase": "https://api.datawrapper.de/v3",
-      "republishOnUpdate": true
+      "republishOnUpdate": false,
+      "_republishComment": "Off on purpose. Every live chart here is linked to the Sheet, and its published bundle carries the export?format=csv URL, so the reader browser fetches the Sheet directly and data freshness does not depend on republishing. Republishing only created new versions, and the embed pins a version, so it silently left the page serving older renders — that happened to five charts. If a chart ever does look stale, republish it by hand and update its version here; check-embed.js compares the two."
     },
     "pollIntervalMs": 25000,
     "sheetFallbackEvery": 4,
