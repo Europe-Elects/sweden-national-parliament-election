@@ -79,31 +79,58 @@ function buildIndex(table) {
 
 /* ---------- transforms ---------- */
 
-/* Kept in sheet shape so the page's renderer consumes `rows` unchanged. */
-function buildExit(rows, { max, integer, seatsTotal }) {
+/* Kept in sheet shape so the page's renderer consumes `rows` unchanged.
+
+   An exit poll covers the whole electorate, so each institute's row has a total
+   it has to be near: shares add to about 100, and a seat projection allocates
+   about the whole chamber. A row far from that is not a projection — it is a
+   tab someone is still filling in. Checking the total is what separates the two,
+   because the individual figures look perfectly ordinary either way. */
+function buildExit(rows, { max, integer, seatsTotal, seatsFixed = true }) {
   const header = rows[0];
   const body = rows.slice(1).filter(r => r[0]);
   if (!body.length) throw new Error('no institute rows');
 
+  const expected = integer ? seatsTotal : 100;
+  /* A fixed-size chamber must come out at its size. Where overhang or levelling
+     seats exist the total floats upward, so the ceiling is lifted rather than
+     the check dropped. */
+  const lo = expected ? expected * (integer && !seatsFixed ? 0.9 : 0.95) : null;
+  const hi = expected ? expected * (integer && !seatsFixed ? 1.5 : 1.05) : null;
+
+  const sums = new Map();
   for (const r of body) {
-    let sum = 0;
+    let sum = 0, seen = 0;
     for (const cell of r.slice(1)) {
       const n = parseNum(cell);
       if (n == null) continue;
       if (n < 0 || n > max) throw new Error(`value ${n} out of range 0..${max} for "${r[0]}"`);
       if (integer && !Number.isInteger(n)) throw new Error(`non-integer seat ${n} for "${r[0]}"`);
-      sum += n;
+      sum += n; seen++;
     }
-    /* Generous bounds: rounding pushes shares past 100, and overhang or
-       levelling seats push seats past the nominal chamber size. These catch a
-       column of the wrong thing, not arithmetic. */
+    if (seen) sums.set(r[0], sum);
     if (!integer && sum > 105) throw new Error(`shares for "${r[0]}" sum to ${sum}`);
     if (integer && seatsTotal && sum > seatsTotal * 1.5) throw new Error(`seats for "${r[0]}" sum to ${sum}`);
   }
 
+  const plausible = [...sums.entries()].filter(([, s]) => lo == null || (s >= lo && s <= hi));
+  const published = plausible.length > 0;
+
+  if (sums.size && !published) {
+    const detail = [...sums.entries()].map(([k, s]) => `${k} sums to ${s}`).join('; ');
+    console.warn(
+      `  WARNING: no row totals anywhere near ${Math.round(expected)} (${detail}). ` +
+      `${integer ? 'A seat projection allocates the whole chamber' : 'Vote shares add to about 100'}, so this tab ` +
+      `holds placeholders. Reporting it as not yet published.`
+    );
+  } else if (plausible.length < sums.size) {
+    const bad = [...sums.entries()].filter(([, s]) => s < lo || s > hi).map(([k, s]) => `${k} sums to ${s}`);
+    console.warn(`  note: ${bad.join('; ')} — off the expected total of about ${Math.round(expected)}`);
+  }
+
   return {
     updated: new Date().toISOString(),
-    published: body.some(r => r.slice(1).some(c => parseNum(c) != null)),
+    published,
     header,
     rows: body,
   };
@@ -337,15 +364,16 @@ function targetsFor(config, index) {
   const votesAre = resultsCfg.votesAre || 'count';
   const minValidVotes = resultsCfg.minValidVotes == null ? null : Number(resultsCfg.minValidVotes);
   const exitSeatMax = seatsTotal ? seatsTotal * 1.5 : 1000;
+  const seatsFixed = (config.election && config.election.seatsFixed) !== false;
 
   const all = [
     {
       file: 'exitVotes.json', tab: tabs.exitVotes, needs: 'exitVotes',
-      build: r => buildExit(r, { max: 100, integer: false, seatsTotal }),
+      build: r => buildExit(r, { max: 100, integer: false, seatsTotal, seatsFixed }),
     },
     {
       file: 'exitSeats.json', tab: tabs.exitSeats, needs: 'exitSeats',
-      build: r => buildExit(r, { max: exitSeatMax, integer: true, seatsTotal }),
+      build: r => buildExit(r, { max: exitSeatMax, integer: true, seatsTotal, seatsFixed }),
     },
     {
       file: 'results.json', tab: tabs.results, needs: 'results',

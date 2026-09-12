@@ -253,13 +253,37 @@ const INDEX = buildIndex(TABLE);
 const exitRows = (...rows) => parseCSV(['"","CDU","GRÜNE"', ...rows].join('\n'));
 
 test('exit poll rows keep the sheet shape', () => {
-  const out = buildExit(exitRows('"Pollster A","30","10"'), { max: 100, integer: false });
+  /* Shares that add to about 100, because a row far off that total now reads
+     as a placeholder rather than a published figure. */
+  const out = buildExit(exitRows('"Pollster A","62","36"'), { max: 100, integer: false });
   assert.strictEqual(out.published, true);
-  assert.deepStrictEqual(out.rows[0], ['Pollster A', '30', '10']);
+  assert.deepStrictEqual(out.rows[0], ['Pollster A', '62', '36']);
 });
 test('an unpublished exit poll is flagged, not failed', () => {
   const out = buildExit(exitRows('"Pollster A","",""'), { max: 100, integer: false });
   assert.strictEqual(out.published, false);
+});
+test('a seat projection far off the chamber size is a placeholder', () => {
+  /* The Sweden tab shipped 10,9,8,7,6,5,4,3 for one institute and
+     100,90,...,30 for the other: 52 and 520 seats for a 349-seat Riksdag.
+     Every individual figure is ordinary; only the total gives it away. */
+  const out = buildExit(exitRows('"A","10","9"', '"B","100","90"'),
+    { max: 520, integer: true, seatsTotal: 349 });
+  assert.strictEqual(out.published, false);
+});
+test('a seat projection that allocates the chamber publishes', () => {
+  const out = buildExit(exitRows('"A","180","169"'),
+    { max: 520, integer: true, seatsTotal: 349 });
+  assert.strictEqual(out.published, true);
+});
+test('seatsFixed false allows an overhang total above the nominal size', () => {
+  const rows = exitRows('"A","400","336"');   // 736 in a 598-seat chamber
+  assert.strictEqual(buildExit(rows, { max: 900, integer: true, seatsTotal: 598 }).published, false);
+  assert.strictEqual(buildExit(rows, { max: 900, integer: true, seatsTotal: 598, seatsFixed: false }).published, true);
+});
+test('exit vote shares must add to about 100 to count as published', () => {
+  assert.strictEqual(buildExit(exitRows('"A","1","1"'), { max: 100, integer: false }).published, false);
+  assert.strictEqual(buildExit(exitRows('"A","52","46"'), { max: 100, integer: false }).published, true);
 });
 test('a share outside 0..100 is refused', () => {
   throws(() => buildExit(exitRows('"Pollster A","130","10"'), { max: 100, integer: false }), /out of range/);

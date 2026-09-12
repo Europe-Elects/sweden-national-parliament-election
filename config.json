@@ -51,7 +51,9 @@
       "turnoutPercent": 84.2,
       "seats": 349,
       "note": null
-    }
+    },
+    "seatsFixed": true,
+    "_seatsFixedComment": "The Riksdag is fixed at 349, so an exit-poll seat projection must add up to it. Set false for a chamber whose size floats with overhang or levelling seats."
   },
   "sheet": {
     "id": "1ApgXml6KBngMsUrt4CAXCmqKYwXdmUTgwREnFhBBnWE",
@@ -59,7 +61,7 @@
       "exitVotes": "exit",
       "exitSeats": "exit_seat",
       "results": "results",
-      "demographic": null
+      "demographic": "demographic vote - SVT"
     },
     "results": {
       "columns": {
@@ -75,7 +77,7 @@
       "_minValidVotesComment": "Sweden 2022 counted about 6.5 million valid votes, so 100000 is far below any real count and far above the placeholder total of 8 the tab shipped with."
     },
     "ignoredTabs": [
-      "General availability on election day"
+      "opening/closing"
     ]
   },
   "parties": {
@@ -193,6 +195,16 @@
         "live": false
       }
     },
+    "demographics": {
+      "label": "Demographic Vote · Over Time",
+      "heading": "Vote share by group, election over election",
+      "sub": "SVT/VALU exit polls, 2002 to date",
+      "panels": 2,
+      "defaultCategories": [],
+      "yMax": 65,
+      "categoryLabels": {},
+      "categoryNotes": {}
+    },
     "turnout": {
       "label": "Turnout by the Hour",
       "heading": "Sweden 2026 · Turnout by the hour",
@@ -251,7 +263,6 @@
     },
     "pollingHistory": null,
     "headToHead": null,
-    "demographics": null,
     "records": {}
   },
   "automation": {
