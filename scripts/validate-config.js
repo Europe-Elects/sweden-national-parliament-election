@@ -11,7 +11,7 @@
 
 const fs = require('fs');
 const path = require('path');
-const { ROOT } = require('./lib/io');
+const { ROOT, DATA_DIR } = require('./lib/io');
 const { loadConfig, loadPalette, findPlaceholders, sectionEnabled } = require('./lib/config');
 const { collectCharts, isPlaceholderId } = require('./lib/charts');
 const { fetchPartiesYaml, resolveParties, listEntries } = require('./lib/parties');
@@ -135,7 +135,16 @@ async function checkParties(config, palette) {
   try {
     ({ text } = await fetchPartiesYaml(source));
   } catch (e) {
-    return err(`cannot read PartiesData: ${e.message}`);
+    /* build-data.js falls back to the committed table when upstream is
+       unreachable, so with a copy on disk this is not worth failing a run over.
+       On election night a PartiesData outage, or an expired token, must not stop
+       results reaching the page — the party table changes rarely and an
+       hours-old one is no worse than a current one. */
+    const committed = path.join(DATA_DIR, 'parties.json');
+    if (fs.existsSync(committed)) {
+      return warn(`PartiesData could not be read, falling back to the committed data/parties.json: ${e.message}`);
+    }
+    return err(`cannot read PartiesData, and there is no committed data/parties.json to fall back on: ${e.message}`);
   }
 
   const doc = parse(text);

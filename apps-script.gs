@@ -169,15 +169,43 @@ function diagnose() {
     (who.getResponseCode() === 200 ? JSON.parse(who.getContentText()).login : who.getContentText().slice(0, 160)));
 
   const r = get('https://api.github.com/repos/' + repo);
-  console.log('GET /repos/' + repo + ' -> ' + r.getResponseCode());
-  if (r.getResponseCode() === 200) {
+  const code = r.getResponseCode();
+  console.log('GET /repos/' + repo + ' -> ' + code);
+
+  if (code === 200) {
     const body = JSON.parse(r.getContentText());
-    console.log('  push permission: ' + (body.permissions && body.permissions.push));
-    if (!(body.permissions && body.permissions.push)) {
-      console.log('  the token can read this repository but not write to it — it needs Contents: Read and write');
-    }
+    /* This says what the ACCOUNT may do, not what the TOKEN may do, and for a
+       public repository it answers 200 even for a token that was never granted
+       access to it. So it cannot confirm the token is right — only the dispatch
+       below can. */
+    console.log('  repository is ' + (body.private ? 'private' : 'PUBLIC') +
+      '; the account has push=' + (body.permissions && body.permissions.push) +
+      ' (this describes the account, not the token)');
   } else {
     console.log('  ' + r.getContentText().slice(0, 200));
-    console.log('  404 here means the token cannot see this repository. Check the name above character by character, then check that the PAT lists this repository and was issued with Europe-Elects as the resource owner, and that the organisation has approved it.');
+    console.log('  the token cannot see this repository at all. Check the name above character by character, then check that the PAT lists this repository, was issued with Europe-Elects as the resource owner, and has been approved by the organisation.');
+    return;
+  }
+
+  /* The only real test. A fine-grained PAT can read a public repository without
+     having been granted anything, so a dispatch is what separates "can see it"
+     from "may write to it". */
+  const d = UrlFetchApp.fetch('https://api.github.com/repos/' + repo + '/dispatches', {
+    method: 'post',
+    contentType: 'application/json',
+    headers: headers,
+    payload: JSON.stringify({ event_type: 'sheet-updated' }),
+    muteHttpExceptions: true,
+  });
+  const dc = d.getResponseCode();
+  console.log('POST /dispatches -> ' + dc);
+
+  if (dc === 204) {
+    console.log('  OK. If no run appears in Actions, the workflow is disabled, or it is not on the default branch.');
+  } else if (dc === 403) {
+    console.log('  403 "Resource not accessible by personal access token" means the token lacks Contents: Read and write on this repository.');
+    console.log('  The usual cause is a mix-up between the two tokens this setup uses: the PartiesData one is read-only, and reading a PUBLIC repository works with it, which is why the check above passed.');
+  } else {
+    console.log('  ' + d.getContentText().slice(0, 200));
   }
 }
