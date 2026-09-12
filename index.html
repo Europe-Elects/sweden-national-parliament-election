@@ -394,7 +394,11 @@ RENDER.exitSeats = cfg => band(cfg.label) + `<div class="card">
 RENDER.turnout = renderEmbedSection;
 
 RENDER.previousResult = (cfg, after, content) => {
-  const rows = (content && content.rows || []).filter(r => parseNum(r.votePercent) != null);
+  /* A row still holding the template's placeholder party and a zero share is
+     not a result. Left in, it renders as a grey "Others" bar of zero width,
+     which looks like a finding rather than an unfilled file. */
+  const rows = (content && content.rows || [])
+    .filter(r => parseNum(r.votePercent) > 0 && has(r.party));
   if (!rows.length) return '';
   const max = Math.max(...rows.map(r => Number(r.votePercent)));
   const bars = rows.map(r => {

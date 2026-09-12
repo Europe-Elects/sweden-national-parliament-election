@@ -1,7 +1,45 @@
 {
-  "_comment": "The previous election's certified result, shown in its own accordion. Also the source of the previous-result column in the results table when parties.baselineSource is \"content\" — which is what you want where the only PartiesData entry for this country is the national one and its last_results would be the wrong baseline for a regional contest. `seats` may be null.",
+  "_comment": "The 2022 certified result, taken from the Result 2022 V and Result 2022 S columns of the results tab. Seats sum to 349, the full Riksdag.",
   "rows": [
-    { "party": "TODO CODE", "votePercent": 0, "seats": null },
-    { "party": "TODO CODE", "votePercent": 0, "seats": null }
+    {
+      "party": "S",
+      "votePercent": 30.3,
+      "seats": 107
+    },
+    {
+      "party": "SD",
+      "votePercent": 20.5,
+      "seats": 73
+    },
+    {
+      "party": "M",
+      "votePercent": 19.1,
+      "seats": 68
+    },
+    {
+      "party": "V",
+      "votePercent": 6.8,
+      "seats": 24
+    },
+    {
+      "party": "C",
+      "votePercent": 6.7,
+      "seats": 24
+    },
+    {
+      "party": "KD",
+      "votePercent": 5.3,
+      "seats": 19
+    },
+    {
+      "party": "MP",
+      "votePercent": 5.1,
+      "seats": 18
+    },
+    {
+      "party": "L",
+      "votePercent": 4.6,
+      "seats": 16
+    }
   ]
 }
