@@ -1,0 +1,8 @@
+{
+  "_comment": "The Context accordion. One string per paragraph. Inline HTML is allowed for emphasis and links — <strong>, <em>, <a>, <mark> — and nothing else is rendered. Delete the placeholders.",
+  "paragraphs": [
+    "TODO Who governs now, on what majority, and what the polls have done to it since the last election.",
+    "TODO Each significant party, its European affiliation and its leader.",
+    "TODO Anything unusual about this contest: a new party standing for the first time, a changed threshold, a redrawn map."
+  ]
+}

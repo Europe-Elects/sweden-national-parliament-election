@@ -1,0 +1,285 @@
+{
+  "$schema": "./config.schema.json",
+
+  "_readme": "Fill this file in and the page is done — nothing in index.html or scripts/ should need editing. Anything set to null disappears from the page. Run `node scripts/validate-config.js` when you are finished. See SETUP.md.",
+
+  "page": {
+    "title": "TODO Parliamentary election in <Jurisdiction> · <Year>",
+    "lang": "en",
+    "frameMessageKey": "electionFrameHeight",
+    "postUrl": null,
+    "_postUrlComment": "The WordPress post this page is embedded in. Used by scripts/check-embed.js, which is the only thing that looks at it — the page never calls back to the post. Set it once the post exists.",
+    "pagesUrl": null,
+    "_pagesUrlComment": "Where this page is published, e.g. https://europe-elects.github.io/<repo>/. Publish it alongside the article: it is served from a CDN and executes no PHP, so it stays up when the WordPress host does not.",
+    "brandName": "Europe Elects",
+    "homeUrl": "https://europeelects.eu/",
+    "contactEmail": "contact@europeelects.eu",
+    "citation": "TODO Author, A. (YYYY, Month D). <Country>: <election> <Year>. Europe Elects. https://europeelects.eu/...",
+    "sources": "TODO comma-separated list of pollsters and the official returning officer"
+  },
+
+  "election": {
+    "title": "TODO Parliamentary election in <Jurisdiction>",
+    "shortTitle": "TODO <Jurisdiction> <Year>",
+    "jurisdiction": {
+      "country": "TODO Country",
+      "territory": null,
+      "territoryNative": null,
+      "_comment": "`territory` is the sub-national unit for a regional election — a German Land, a Spanish comunidad autónoma, an Italian regione, a Belgian region, a devolved UK nation. Leave it null for a national election. `territoryNative` is the local-language spelling, used only where the page shows it alongside the English one; null repeats `territory`."
+    },
+    "chamber": "TODO National Parliament",
+    "date": { "iso": "TODO YYYY-MM-DD", "display": "TODO D Month YYYY" },
+    "timezone": "TODO CET",
+    "pollsCloseTime": "TODO 21:00",
+    "firstProjectionTime": null,
+    "_firstProjectionComment": "When the first projection is expected, if the pollsters publish one. null removes that sentence from the page.",
+
+    "seatsTotal": null,
+    "_seatsTotalComment": "Size of the chamber being elected. Used to sanity-check seat figures coming out of the Sheet. null for a presidential election, or where seats are not reported.",
+
+    "thresholdPercent": null,
+    "ballotName": null,
+    "_ballotNameComment": "What the counted vote is called locally, e.g. \"list vote\", \"second vote (Landesstimme)\", \"regional list vote\". null omits it.",
+
+    "quickFacts": [
+      { "value": "TODO D Month YYYY", "label": "Election day" },
+      { "value": "TODO N seats", "label": "TODO chamber name" },
+      { "value": "TODO 07:00–21:00", "label": "Polls open" },
+      { "value": "TODO 0,000,000", "label": "Eligible voters" }
+    ],
+
+    "previous": {
+      "year": null,
+      "date": null,
+      "turnoutPercent": null,
+      "seats": null,
+      "note": null,
+      "_comment": "The election this one is compared against. Set the whole object to null where there is no comparable predecessor — a newly created assembly, or a first election under a new franchise."
+    }
+  },
+
+  "sheet": {
+    "id": "TODO paste the Sheet ID out of its URL",
+    "_tabsComment": "Tabs are referenced by NAME, never by gid. A gid is regenerated every time a Sheet is duplicated; the name survives. Names are case-sensitive and must match the tab exactly, spaces and punctuation included. Set a tab to null when that tab does not exist for this election — the section that depends on it is then dropped.",
+    "tabs": {
+      "exitVotes": "exit",
+      "exitSeats": "exit_seat",
+      "results": "results",
+      "demographic": null
+    },
+    "results": {
+      "_comment": "Layout of the `results` tab. Column 0 is always the party name; these are the 0-based indexes of the rest. Set `seats`, `changeVotes` or `changeSeats` to null where the tab does not carry that column — a presidential first round has no seats, and a first-ever election has nothing to change against.",
+      "columns": { "votes": 1, "share": 2, "seats": 3, "changeVotes": 4, "changeSeats": 5 },
+      "totalRowPattern": "valid votes",
+      "_totalRowComment": "Case-insensitive regular expression matching the label of the totals row, so it is summed as an electorate figure rather than mistaken for a party."
+    },
+
+    "ignoredTabs": [],
+    "_ignoredTabsComment": "Tabs the Apps Script should NOT treat as a reason to rebuild — working tabs that feed nothing on the page. Deliberately a deny-list: forgetting to list a tab costs one wasted no-op run, whereas an allow-list fails silently and loses data."
+  },
+
+  "parties": {
+    "source": {
+      "repo": "Europe-Elects/PartiesData",
+      "ref": "main",
+      "continent": "Europe",
+      "country": "TODO Country",
+      "electionType": "TODO national parliament",
+
+      "localPath": null,
+      "_localPathComment": "Path to a local PartiesData checkout, e.g. \"../PartiesData\". When set it is read instead of GitHub, which is how this runs offline and without a token. Leave null in the committed config — the Action has no checkout to read.",
+
+      "_authComment": "PartiesData is a private repository, so the build reads it through the GitHub Contents API with a token from PARTIESDATA_TOKEN (a fine-grained PAT with Contents: Read on it). In the Action that is a repository secret of the same name. See SETUP.md.",
+
+      "_comment": "`continent` picks the file (<continent>/partiesdata.yaml). `country` and `electionType` are the first two YAML keys inside it and must match verbatim. PartiesData files sub-national elections two different ways, and both work here: as an election type under the country — country \"Germany\" with electionType \"Saxony-Anhalt regional parliament\" (also \"Berlin regional parliament\", \"Mecklenburg-Vorpommern regional\") — or as a top-level key of its own, where country is \"Belgium (Flanders)\", \"United Kingdom (Scotland)\", \"Greenland (Denmark)\" and electionType is \"national parliament\". Run `node scripts/fetch-parties.js --list` to print what actually exists for a country before guessing."
+    },
+
+    "requireSource": true,
+    "_requireSourceComment": "Set false when the territory has no PartiesData entry at all — plenty of regions do not. The build then does not fail on a missing entry, and every party has to come from `metadataFallback` and `extra` instead.",
+
+    "metadataFallback": [],
+    "_metadataFallbackComment": "Entries tried, in order, for a party the primary entry does not list — for a regional election that would typically be [{ \"country\": \"Germany\", \"electionType\": \"national parliament\" }]. Only ep_group, colour and full name are taken from a fallback; `last_results` never is, because a national result is not a regional baseline.",
+
+    "baselineSource": "partiesdata",
+    "_baselineSourceComment": "Where the previous-election figure in the results table comes from. \"partiesdata\" reads `last_results` off the entry named in `source` — correct when that entry really is this territory's own last election. \"content\" reads content/previous-result.json instead, which is what you want when the only PartiesData entry available is the national one. \"none\" drops the column.",
+
+    "order": [],
+    "_orderComment": "Display order as a list of template codes. Empty keeps PartiesData's own order.",
+
+    "overrides": {
+      "_comment": "Keyed by the party's key in PartiesData. Every field is optional — anything omitted is derived: `code` from the key (uppercased, de-accented), `name` as \"<key> (<ep_group>)\", `color` from the party's own PartiesData `color:` and otherwise from europarty-palette.json, `euro` as \"<europarty> (<ep_group>)\". `aliases` adds spellings the Sheet may use; the key, the code and the display name already match automatically. Delete the example below.",
+
+      "EXAMPLE — delete me": {
+        "code": "TSP",
+        "name": "Animal Welfare Party",
+        "full": "Full registered name",
+        "family": "Animal rights",
+        "color": "#009076",
+        "euro": "Animal Politics (LEFT)",
+        "aliases": ["alternative spelling used in the Sheet"]
+      }
+    },
+
+    "extra": {
+      "_comment": "Parties PartiesData does not carry and will not — historic ones that appear only in a long polling series, or regional parties below the national radar. Same fields as an override, but `name` and `color` are required because there is nothing to derive them from. With `requireSource: false` this is where the whole party list lives. Delete the example below.",
+
+      "EXAMPLE — delete me": {
+        "code": "OLD",
+        "name": "Defunct Party",
+        "full": "Defunct Party, dissolved 2009",
+        "family": "Far-right",
+        "color": "#4a3728",
+        "euro": "—",
+        "baseline": null,
+        "aliases": []
+      }
+    }
+  },
+
+  "sections": {
+    "_comment": "The page is built from these, in this order. Set any section to null to remove it completely — heading, card and fetches all go. `label` is the coloured band, `heading`/`sub`/`note` the card text. Charts are Datawrapper embeds: `id` is the 5-character chart ID, `version` the published version in the embed URL (a fresh copy starts at 1), `live: true` means the chart reads the Sheet and the Action republishes it on every update.",
+
+    "context": {
+      "label": "Context",
+      "open": false,
+      "_source": "content/context.json"
+    },
+
+    "candidates": {
+      "label": "Lead Candidates",
+      "open": false,
+      "_source": "content/candidates.json"
+    },
+
+    "results": {
+      "label": "Results",
+      "heading": "All contesting parties",
+      "sub": "TODO Every party on the ballot, with its European party affiliation. Official results and the change vs. the previous election populate after polls close.",
+      "decimals": 2
+    },
+
+    "projections": {
+      "label": "Projections",
+      "heading": "TODO Pollster projections over time",
+      "sub": "TODO Pollsters publish projections — a mix of exit poll and counted result — through election night.",
+      "note": "TODO These charts stay empty until the first projection is published.",
+      "charts": [
+        { "label": "TODO Pollster A · popular vote", "id": "TODO01", "version": 1, "height": 397, "ariaLabel": "Line chart", "live": true },
+        { "label": "TODO Pollster A · seats",        "id": "TODO02", "version": 1, "height": 397, "ariaLabel": "Line chart", "live": true }
+      ]
+    },
+
+    "exitVotes": {
+      "label": "Exit Poll · Popular Vote",
+      "heading": "TODO Exit poll, popular vote",
+      "sub": "TODO Vote share by party, as published when polls close",
+      "empty": "TODO Exit poll figures will appear here once published.",
+      "axisStep": 10
+    },
+
+    "exitSeats": {
+      "label": "Exit Poll · Seats",
+      "heading": "TODO Exit poll, seat estimate",
+      "sub": "TODO Projected seats by party, as published when polls close",
+      "empty": "TODO Exit poll seat estimates will appear here once published.",
+      "axisStep": 10
+    },
+
+    "turnout": {
+      "label": "Turnout by the Hour",
+      "heading": "TODO Turnout by the hour",
+      "sub": "TODO Cumulative turnout reported through election day, local time",
+      "note": null,
+      "chart": { "label": "Turnout", "id": "TODO03", "version": 1, "height": 391, "ariaLabel": "Line chart", "live": true }
+    },
+
+    "previousResult": {
+      "label": "TODO Previous Result",
+      "heading": "TODO Previous election · final result",
+      "sub": "TODO date · turnout · seats",
+      "open": false,
+      "_source": "content/previous-result.json"
+    },
+
+    "polling": {
+      "label": "Pre-Election Polling",
+      "heading": "TODO Voting intention since the previous election",
+      "sub": "TODO Polls published between the two elections",
+      "yMax": null,
+      "_yMaxComment": "Top of the y-axis, in percent. null auto-scales to the data.",
+      "_source": "content/polls.json"
+    },
+
+    "pollingHistory": {
+      "label": null,
+      "_labelComment": "null shares the band opened by the section above instead of opening a new one.",
+      "heading": "TODO Voting intention, long series",
+      "sub": "TODO Every poll on record",
+      "note": null,
+      "_source": "content/poll-history.json"
+    },
+
+    "headToHead": {
+      "label": "TODO Preferred Head of Government",
+      "heading": "TODO Head-to-head polling",
+      "sub": null,
+      "note": null,
+      "yMax": null,
+      "_source": "content/head-to-head.json",
+      "_comment": "A candidate-against-candidate series: preferred prime minister, preferred first minister, a presidential run-off pairing. null where no such polling exists."
+    },
+
+    "coalitions": {
+      "label": "Coalition Options",
+      "heading": "Possible coalition combinations",
+      "sub": "TODO Combined seat or vote share of viable coalitions, per the latest exit poll",
+      "note": "TODO Coalition arithmetic appears once the first exit poll is published.",
+      "charts": [
+        { "label": "TODO Pollster A", "id": "TODO04", "version": 1, "height": 207, "ariaLabel": "Stacked Bars", "live": true }
+      ]
+    },
+
+    "demographics": {
+      "label": "Demographic Vote",
+      "heading": "Vote share by group, election over election",
+      "sub": "TODO Exit-poll breakdowns by demographic group",
+      "panels": 2,
+      "_panelsComment": "How many independently-selectable charts to show side by side.",
+      "defaultCategories": [],
+      "_defaultCategoriesComment": "One category name per panel, matching the Group column in the Sheet tab. Empty picks the first categories available.",
+      "yMax": 65,
+      "categoryLabels": {},
+      "categoryNotes": {},
+      "_labelsComment": "Optional display name and footnote per category, keyed by the Group value in the Sheet.",
+      "_source": "content/demographic-seed.json"
+    },
+
+    "history": {
+      "label": "Electoral History",
+      "heading": "TODO Vote share and seats by election",
+      "sub": "TODO Certified results, earliest election to date",
+      "charts": [
+        { "label": "Popular vote", "id": "TODO05", "version": 1, "height": 268, "ariaLabel": "Stacked Bars", "live": false },
+        { "label": "Seats",        "id": "TODO06", "version": 1, "height": 251, "ariaLabel": "Stacked Bars", "live": false }
+      ]
+    },
+
+    "records": {
+      "_comment": "Ranked comparison lists — a party's best results, its biggest gains, the weakest showing for a governing party. Each block is defined in content/records.json; this section only switches them on.",
+      "_source": "content/records.json"
+    }
+  },
+
+  "automation": {
+    "githubRepo": "TODO Europe-Elects/<this-repo>",
+    "_githubRepoComment": "Used by scripts/ for log lines and by SETUP.md. The Action itself uses $GITHUB_REPOSITORY and the Apps Script reads its own GITHUB_REPO script property, so a wrong value here breaks nothing.",
+    "datawrapper": {
+      "apiBase": "https://api.datawrapper.de/v3",
+      "republishOnUpdate": true
+    },
+    "pollIntervalMs": 25000,
+    "sheetFallbackEvery": 4,
+    "_sheetFallbackComment": "The page reads the generated JSON first and only falls back to reading the Sheet directly every Nth cycle — the Sheet sends no-store, so every reader hitting it goes to Google unbuffered.",
+    "staleAfterMs": 300000
+  }
+}

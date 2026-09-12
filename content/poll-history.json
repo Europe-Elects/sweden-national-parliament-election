@@ -1,0 +1,13 @@
+{
+  "_comment": "The long series — every poll on record, usually reaching back several elections. Same row shape as content/polls.json, and normally a superset of it. Kept separate because it is written once from an archive and then left alone, while polls.json is appended to through the campaign. Parties that have since dissolved go in config.json under parties.extra so they still have a name and a colour here.",
+  "parties": [],
+  "from": null,
+  "_fromComment": "Left edge of the x-axis as YYYY-MM-DD. null starts at the earliest poll.",
+  "polls": [
+    {
+      "date": "TODO YYYY-MM-DD",
+      "pollster": "TODO Pollster",
+      "values": { "TODO CODE": 0 }
+    }
+  ]
+}

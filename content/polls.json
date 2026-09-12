@@ -1,0 +1,19 @@
+{
+  "_comment": "Voting intention since the previous election. One object per published poll. `date` is the publication date as YYYY-MM-DD; `fieldwork` is free text and may be null. `values` maps a template code to a percentage — omit a party entirely for a poll that did not prompt for it, which leaves a gap in the chart rather than plotting a zero. Put the previous election itself in as the first row, with pollster set to its name, so the series starts from a real result.",
+  "parties": [],
+  "_partiesComment": "Which parties to plot, as codes, in legend order. Empty plots every party that appears in at least one poll below.",
+  "polls": [
+    {
+      "date": "TODO YYYY-MM-DD",
+      "pollster": "TODO Previous election",
+      "fieldwork": null,
+      "values": { "TODO CODE": 0 }
+    },
+    {
+      "date": "TODO YYYY-MM-DD",
+      "pollster": "TODO Pollster",
+      "fieldwork": "TODO D–D Month YYYY",
+      "values": { "TODO CODE": 0 }
+    }
+  ]
+}

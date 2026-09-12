@@ -1,0 +1,236 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Election page configuration",
+  "description": "Drives index.html, scripts/ and the GitHub Action. Editors that follow $schema will autocomplete and validate against this; scripts/validate-config.js checks the things a schema cannot, such as whether the PartiesData entry actually exists.",
+  "type": "object",
+  "required": ["page", "election", "sheet", "parties", "sections", "automation"],
+  "additionalProperties": true,
+
+  "definitions": {
+    "chart": {
+      "type": "object",
+      "description": "A Datawrapper embed.",
+      "required": ["id"],
+      "properties": {
+        "label": { "type": ["string", "null"], "description": "Caption above the embed. null renders the chart with no caption." },
+        "id": { "type": "string", "description": "The Datawrapper chart ID — the 5 characters in the embed URL." },
+        "version": { "type": "integer", "minimum": 1, "default": 1, "description": "Published version from the embed URL. A fresh copy starts at 1." },
+        "height": { "type": "integer", "minimum": 50, "default": 400, "description": "Initial iframe height. Datawrapper corrects it once loaded; this only avoids a jump." },
+        "ariaLabel": { "type": "string", "default": "Chart", "description": "Chart type for screen readers, e.g. \"Line chart\", \"Stacked Bars\"." },
+        "live": { "type": "boolean", "default": false, "description": "true if the chart reads the Sheet and should be republished whenever the data changes. Static history charts are false." }
+      },
+      "additionalProperties": true
+    },
+
+    "partyMeta": {
+      "type": "object",
+      "description": "Overrides for one party. Every field is optional unless this is a parties.extra entry, which needs at least name and color.",
+      "properties": {
+        "code": { "type": "string", "description": "Identifier used by content files, Sheet columns and the page. Defaults to the PartiesData key, uppercased and de-accented." },
+        "name": { "type": "string", "description": "Display name. Defaults to \"<key> (<ep_group>)\"." },
+        "full": { "type": "string", "description": "Full registered name, for reference." },
+        "family": { "type": ["string", "null"], "description": "Political family, for reference." },
+        "color": { "type": "string", "pattern": "^#[0-9a-fA-F]{6}$", "description": "Overrides both the party's PartiesData colour and the europarty palette." },
+        "euro": { "type": "string", "description": "Europarty tag shown in the results table. Defaults to \"<europarty> (<ep_group>)\"." },
+        "epGroup": { "type": "string", "description": "Overrides the EP group, for a party PartiesData has not classified yet." },
+        "baseline": { "type": ["number", "null"], "description": "Previous-election share, where it does not come from PartiesData." },
+        "aliases": { "type": "array", "items": { "type": "string" }, "description": "Extra spellings the Sheet may use. The key, code and display name already match." }
+      },
+      "additionalProperties": true
+    }
+  },
+
+  "properties": {
+    "page": {
+      "type": "object",
+      "properties": {
+        "title": { "type": "string", "description": "Browser tab title." },
+        "lang": { "type": "string", "default": "en" },
+        "frameMessageKey": { "type": "string", "default": "electionFrameHeight", "description": "postMessage key this page uses to tell a parent frame its height. The WordPress snippet must listen for the same one." },
+        "postUrl": { "type": ["string", "null"], "description": "The WordPress post this page is embedded in. Only scripts/check-embed.js reads it; the page never calls back to the post." },
+        "pagesUrl": { "type": ["string", "null"], "description": "Where this page is published. Publish it alongside the article as a fallback: it is CDN-served and executes no PHP." },
+        "brandName": { "type": ["string", "null"] },
+        "homeUrl": { "type": ["string", "null"] },
+        "contactEmail": { "type": ["string", "null"] },
+        "citation": { "type": ["string", "null"] },
+        "sources": { "type": ["string", "null"] }
+      },
+      "additionalProperties": true
+    },
+
+    "election": {
+      "type": "object",
+      "required": ["title", "date"],
+      "properties": {
+        "title": { "type": "string" },
+        "shortTitle": { "type": ["string", "null"] },
+        "jurisdiction": {
+          "type": "object",
+          "properties": {
+            "country": { "type": "string" },
+            "territory": { "type": ["string", "null"], "description": "Sub-national unit for a regional election; null for a national one." },
+            "territoryNative": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "chamber": { "type": ["string", "null"] },
+        "date": {
+          "type": "object",
+          "required": ["iso"],
+          "properties": {
+            "iso": { "type": "string", "description": "YYYY-MM-DD." },
+            "display": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "timezone": { "type": ["string", "null"] },
+        "pollsCloseTime": { "type": ["string", "null"] },
+        "firstProjectionTime": { "type": ["string", "null"] },
+        "seatsTotal": { "type": ["integer", "null"], "minimum": 1, "description": "Chamber size, used to range-check seat figures. null where seats are not reported." },
+        "thresholdPercent": { "type": ["number", "null"] },
+        "ballotName": { "type": ["string", "null"] },
+        "quickFacts": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": { "value": { "type": "string" }, "label": { "type": "string" } },
+            "additionalProperties": true
+          }
+        },
+        "previous": {
+          "type": ["object", "null"],
+          "properties": {
+            "year": { "type": ["integer", "null"] },
+            "date": { "type": ["string", "null"] },
+            "turnoutPercent": { "type": ["number", "null"] },
+            "seats": { "type": ["integer", "null"] },
+            "note": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        }
+      },
+      "additionalProperties": true
+    },
+
+    "sheet": {
+      "type": "object",
+      "required": ["id", "tabs"],
+      "properties": {
+        "id": { "type": "string", "description": "The long token between /d/ and /edit in the Sheet URL." },
+        "tabs": {
+          "type": "object",
+          "description": "Tab NAMES, never gids — a gid is regenerated every time a Sheet is duplicated. null drops the section that reads it.",
+          "properties": {
+            "exitVotes": { "type": ["string", "null"] },
+            "exitSeats": { "type": ["string", "null"] },
+            "results": { "type": ["string", "null"] },
+            "demographic": { "type": ["string", "null"] }
+          },
+          "additionalProperties": true
+        },
+        "results": {
+          "type": "object",
+          "properties": {
+            "columns": {
+              "type": "object",
+              "description": "0-based column indexes on the results tab. Column 0 is always the party name.",
+              "properties": {
+                "votes": { "type": "integer", "minimum": 1 },
+                "share": { "type": "integer", "minimum": 1 },
+                "seats": { "type": ["integer", "null"], "minimum": 1 },
+                "changeVotes": { "type": ["integer", "null"], "minimum": 1 },
+                "changeSeats": { "type": ["integer", "null"], "minimum": 1 }
+              },
+              "additionalProperties": true
+            },
+            "totalRowPattern": { "type": "string", "description": "Case-insensitive regular expression matching the totals row label." }
+          },
+          "additionalProperties": true
+        },
+        "ignoredTabs": { "type": "array", "items": { "type": "string" } }
+      },
+      "additionalProperties": true
+    },
+
+    "parties": {
+      "type": "object",
+      "required": ["source"],
+      "properties": {
+        "source": {
+          "type": "object",
+          "required": ["repo", "ref", "continent", "country", "electionType"],
+          "properties": {
+            "repo": { "type": "string", "default": "Europe-Elects/PartiesData" },
+            "ref": { "type": "string", "default": "main" },
+            "continent": { "type": "string", "description": "Picks the file: <continent>/partiesdata.yaml." },
+            "country": { "type": "string", "description": "First-level key. Sub-national units are sometimes their own key, e.g. \"Belgium (Flanders)\"." },
+            "electionType": { "type": "string", "description": "Second-level key, verbatim. Run `node scripts/fetch-parties.js --list` to see what exists." }
+          },
+          "additionalProperties": true
+        },
+        "requireSource": { "type": "boolean", "default": true, "description": "false lets the build proceed when the territory has no PartiesData entry at all." },
+        "metadataFallback": {
+          "type": "array",
+          "description": "Entries tried, in order, for a party the primary entry does not list. Supplies group, colour and name only — never a baseline.",
+          "items": {
+            "type": "object",
+            "required": ["country", "electionType"],
+            "properties": { "country": { "type": "string" }, "electionType": { "type": "string" } },
+            "additionalProperties": true
+          }
+        },
+        "baselineSource": {
+          "enum": ["partiesdata", "content", "none"],
+          "default": "partiesdata",
+          "description": "Where the previous-result column comes from: PartiesData last_results, content/previous-result.json, or nowhere."
+        },
+        "order": { "type": "array", "items": { "type": "string" }, "description": "Display order by code. Empty keeps PartiesData's order." },
+        "overrides": { "type": "object", "additionalProperties": { "$ref": "#/definitions/partyMeta" } },
+        "extra": { "type": "object", "additionalProperties": { "$ref": "#/definitions/partyMeta" } }
+      },
+      "additionalProperties": true
+    },
+
+    "sections": {
+      "type": "object",
+      "description": "Rendered in key order. Any section set to null is removed from the page and its content file is never fetched.",
+      "properties": {
+        "context":        { "type": ["object", "null"] },
+        "candidates":     { "type": ["object", "null"] },
+        "results":        { "type": ["object", "null"] },
+        "projections":    { "type": ["object", "null"], "properties": { "charts": { "type": "array", "items": { "$ref": "#/definitions/chart" } } } },
+        "exitVotes":      { "type": ["object", "null"] },
+        "exitSeats":      { "type": ["object", "null"] },
+        "turnout":        { "type": ["object", "null"], "properties": { "chart": { "$ref": "#/definitions/chart" } } },
+        "previousResult": { "type": ["object", "null"] },
+        "polling":        { "type": ["object", "null"] },
+        "pollingHistory": { "type": ["object", "null"] },
+        "headToHead":     { "type": ["object", "null"] },
+        "coalitions":     { "type": ["object", "null"], "properties": { "charts": { "type": "array", "items": { "$ref": "#/definitions/chart" } } } },
+        "demographics":   { "type": ["object", "null"], "properties": { "panels": { "type": "integer", "minimum": 1 } } },
+        "history":        { "type": ["object", "null"], "properties": { "charts": { "type": "array", "items": { "$ref": "#/definitions/chart" } } } },
+        "records":        { "type": ["object", "null"] }
+      },
+      "additionalProperties": true
+    },
+
+    "automation": {
+      "type": "object",
+      "properties": {
+        "githubRepo": { "type": "string" },
+        "datawrapper": {
+          "type": "object",
+          "properties": {
+            "apiBase": { "type": "string", "default": "https://api.datawrapper.de/v3" },
+            "republishOnUpdate": { "type": "boolean", "default": true }
+          },
+          "additionalProperties": true
+        },
+        "pollIntervalMs": { "type": "integer", "minimum": 5000, "default": 25000 },
+        "sheetFallbackEvery": { "type": "integer", "minimum": 1, "default": 4 },
+        "staleAfterMs": { "type": "integer", "minimum": 30000, "default": 300000 }
+      },
+      "additionalProperties": true
+    }
+  }
+}

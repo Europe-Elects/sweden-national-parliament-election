@@ -1,0 +1,68 @@
+{
+  "_comment": [
+    "Maps a PartiesData `ep_group` value to a display europarty name and a hex colour.",
+    "Colours are transcribed from the 'Standard colour pallet' comment block at the top of",
+    "Europe-Elects/PartiesData -> Europe/partiesdata.yaml, which credits the Political Party",
+    "Database Codebook (Poguntke et al., 2025). That block is a YAML comment, not data, so it",
+    "cannot be read programmatically — this file is the machine-readable transcription of it.",
+    "",
+    "Resolution order for a party's colour, highest priority first:",
+    "  1. config.json  parties.overrides.<PartiesData key>.color",
+    "  2. PartiesData  the party's own optional `color:` key",
+    "  3. this file    groups[<ep_group>].color",
+    "  4. this file    fallback.color",
+    "",
+    "`ep_group` prefixes ~ (approximation) and -> (transition) are stripped before lookup;",
+    "an array or a pipe-separated composite uses its first member for the colour."
+  ],
+
+  "groups": {
+    "EPP":         { "europarty": "EPP",   "color": "#3399FF", "note": "Centre-right / Christian Democrats" },
+    "S&D":         { "europarty": "PES",   "color": "#FF0000", "note": "Centre-left / Social Democrats" },
+    "RE":          { "europarty": "ALDE",  "color": "#FFD700", "note": "Liberal" },
+    "Greens/EFA":  { "europarty": "EGP",   "color": "#009900", "note": "Greens" },
+    "LEFT":        { "europarty": "EL",    "color": "#990000", "note": "Left-wing / Left Socialists (PEL)" },
+    "ECR":         { "europarty": "ECR",   "color": "#0000FF", "note": "National conservatism" },
+    "PfE":         { "europarty": "PfE",   "color": "#000000", "note": "Right-wing populists" },
+    "ESN":         { "europarty": "ESN",   "color": "#70463A", "note": "Far right" },
+    "NI":          { "europarty": "None",  "color": "#9aa0a6", "note": "Non-Inscrits — no shared family, so this is a neutral default" },
+    "*":           { "europarty": "None",  "color": "#999999", "note": "Unknown / independent" }
+  },
+
+  "families": {
+    "_comment": "Additional entries from the palette block that are not EP groups. Usable as an override value, and used directly by non-Europe PartiesData files, whose ep_group field holds an ideology rather than an EP group.",
+
+    "Agrarian":                  { "europarty": "—",     "color": "#90ee90" },
+    "Animal rights":             { "europarty": "Animal Politics", "color": "#009076" },
+    "Centrist":                  { "europarty": "EDP",   "color": "#fa8c00" },
+    "Christian fundamentalist":  { "europarty": "ECPP",  "color": "#a16585" },
+    "Eco-Socialist":             { "europarty": "ELA",   "color": "#fb1d79" },
+    "Eurofederalist":            { "europarty": "Volt",  "color": "#502379" },
+    "Far-left":                  { "europarty": "ECL",   "color": "#7c0000" },
+    "Libertarian":               { "europarty": "—",     "color": "#F2C300" },
+    "Pirate":                    { "europarty": "PPEU",  "color": "#9c36b8" },
+    "Regionalist":               { "europarty": "EFA",   "color": "#008080" },
+
+    "Centre-left":   { "europarty": "—", "color": "#FF0000" },
+    "Centre-right":  { "europarty": "—", "color": "#3399FF" },
+    "Centre":        { "europarty": "—", "color": "#fa8c00" },
+    "Conservative":  { "europarty": "—", "color": "#0000FF" },
+    "Green":         { "europarty": "—", "color": "#009900" },
+    "Left":          { "europarty": "—", "color": "#990000" },
+    "Liberal":       { "europarty": "—", "color": "#FFD700" },
+    "Right":         { "europarty": "—", "color": "#000000" },
+    "Religious":     { "europarty": "—", "color": "#a16585" },
+    "Islamist":      { "europarty": "—", "color": "#0b6b3a" },
+    "Indigenous":    { "europarty": "—", "color": "#b06a2c" },
+    "Ind":           { "europarty": "—", "color": "#999999" }
+  },
+
+  "fallback": { "europarty": "None", "color": "#999999" },
+
+  "others": {
+    "_comment": "The synthetic bucket a sheet label falls into when it matches no configured party.",
+    "code": "OTHERS",
+    "name": "Others",
+    "color": "#c7c4b8"
+  }
+}

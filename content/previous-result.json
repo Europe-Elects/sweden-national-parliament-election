@@ -1,0 +1,7 @@
+{
+  "_comment": "The previous election's certified result, shown in its own accordion. Also the source of the previous-result column in the results table when parties.baselineSource is \"content\" — which is what you want where the only PartiesData entry for this country is the national one and its last_results would be the wrong baseline for a regional contest. `seats` may be null.",
+  "rows": [
+    { "party": "TODO CODE", "votePercent": 0, "seats": null },
+    { "party": "TODO CODE", "votePercent": 0, "seats": null }
+  ]
+}

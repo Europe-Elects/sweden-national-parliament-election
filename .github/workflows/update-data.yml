@@ -1,0 +1,110 @@
+name: Update election data
+
+# repository_dispatch only fires for workflows on the default branch — this file
+# has to be on main before the Apps Script trigger does anything at all.
+on:
+  repository_dispatch:
+    types: [sheet-updated]
+  workflow_dispatch:
+  schedule:
+    # Offset from the hour and off a round interval: */5 is the most contended
+    # pattern on GitHub's scheduler and runs get dropped entirely. This is only a
+    # backstop anyway — the Apps Script dispatch is the primary trigger.
+    - cron: '3,13,23,33,43,53 * * * *'
+
+permissions:
+  contents: write
+  pages: write
+
+# Queued, not cancelled: a cancelled run could drop a result that landed
+# mid-count.
+concurrency:
+  group: update-data
+  cancel-in-progress: false
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      # Pinned to a commit — a tag can be moved.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
+
+      # client_payload is attacker-controlled if the dispatch PAT ever leaks, so
+      # it is never read and never interpolated into a run block.
+
+      # A Pages build can fail, or hang in "building" and never finish, while the
+      # site keeps serving the previous commit and GitHub reports Pages as
+      # operational. Either way the deploy silently stops and nothing signals it.
+      # Requesting a build clears both cases.
+      - name: Recover a failed or stalled Pages build
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          set -uo pipefail
+          info=$(gh api "repos/${GITHUB_REPOSITORY}/pages/builds" --jq '.[0] | "\(.status) \(.created_at)"' 2>/dev/null || echo "unknown -")
+          status=${info%% *}
+          created=${info##* }
+          echo "last Pages build: ${status} (${created})"
+
+          stalled=0
+          if [ "${status}" = "building" ] && [ "${created}" != "-" ]; then
+            age=$(( $(date -u +%s) - $(date -u -d "${created}" +%s) ))
+            echo "that build has been running for ${age}s"
+            [ "${age}" -gt 300 ] && stalled=1
+          fi
+
+          if [ "${status}" = "errored" ] || [ "${stalled}" = "1" ]; then
+            echo "::warning::Pages build ${status} for ${created} - requesting a rebuild so the site stops serving stale data"
+            gh api -X POST "repos/${GITHUB_REPOSITORY}/pages/builds" || echo "::warning::rebuild request failed"
+          fi
+
+      - name: Test the transforms
+        run: node scripts/build-data.test.js
+
+      # Cheap, and it turns a broken config into a clear message here rather than
+      # a blank section on the page. Leftover TODOs are only warnings, so a page
+      # still being filled in can already run its pipeline.
+      # PARTIESDATA_TOKEN reads the party table out of Europe-Elects/PartiesData,
+      # which is private — the workflow's own GITHUB_TOKEN is scoped to this
+      # repository and cannot see it. Without the secret the build falls back to
+      # the committed data/parties.json and says so.
+      - name: Check the config
+        env:
+          PARTIESDATA_TOKEN: ${{ secrets.PARTIESDATA_TOKEN }}
+        run: node scripts/validate-config.js --allow-todo
+
+      - name: Build data
+        env:
+          PARTIESDATA_TOKEN: ${{ secrets.PARTIESDATA_TOKEN }}
+        run: node scripts/build-data.js
+
+      # /data is generated, never authored, so a rejected push is not a merge
+      # problem — rebasing two independently built copies of the same JSON just
+      # conflicts on the timestamp. Discard, take the new tip, rebuild.
+      - name: Commit and push if anything changed
+        run: |
+          set -euo pipefail
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          for attempt in 1 2 3; do
+            git add data
+            if git diff --cached --quiet; then
+              echo "no data changes"
+              exit 0
+            fi
+            git commit -m "Update election data [skip ci]"
+            if git push; then exit 0; fi
+            echo "push rejected on attempt ${attempt}; rebuilding on the new tip"
+            git fetch origin "${GITHUB_REF_NAME}"
+            git reset --hard "origin/${GITHUB_REF_NAME}"
+            node scripts/build-data.js
+          done
+          echo "could not push after 3 attempts" >&2
+          exit 1
+
+      # The live charts read the Sheet directly; republishing is what makes them
+      # re-fetch it. Which charts are live comes from config.json.
+      - name: Republish Datawrapper charts
+        env:
+          DATAWRAPPER_TOKEN: ${{ secrets.DATAWRAPPER_TOKEN }}
+        run: node scripts/republish-charts.js

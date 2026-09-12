@@ -1,0 +1,26 @@
+{
+  "_comment": "Ranked comparison lists. Each block is one coloured band and one card — 'this party's five best results anywhere', 'its five biggest gains', 'the governing party's five weakest showings'. Every block is optional; an empty `blocks` array removes the whole section.\n\n`party` is a template code and supplies the bar colour. `format` is \"share\" for a percentage or \"pp\" for a percentage-point change. `max` is the width the bars are scaled against — set it a little above the largest value, including the one this election is likely to produce, so the pending bar still reads against the list. `rows` are the historical entries, already ranked.\n\n`pending` is this election's own row, drawn dashed until real figures exist. Its `value` is the current polling figure, replaced by the exit poll once one is published: name the pollster in `institute` and the exit-poll row whose figure should be used is found by matching that against the first column of the exit-poll Sheet tab. For a \"pp\" block, `baseline` is the figure the exit poll is compared against.",
+
+  "blocks": [
+    {
+      "id": "TODO best-results",
+      "label": "TODO PARTY · Best Results",
+      "heading": "TODO PARTY's five strongest results to date",
+      "sub": "TODO Vote share, all comparable elections",
+      "note": "TODO Where this election's row is expected to land, and what it currently reflects.",
+      "party": "TODO CODE",
+      "format": "share",
+      "max": 45,
+      "rows": [
+        { "rank": 1, "value": 0, "year": 2024, "where": "TODO Territory" },
+        { "rank": 2, "value": 0, "year": 2024, "where": "TODO Territory" }
+      ],
+      "pending": {
+        "value": 0,
+        "label": "TODO Territory",
+        "institute": "TODO pollster name as it appears in the exit-poll tab",
+        "baseline": null
+      }
+    }
+  ]
+}

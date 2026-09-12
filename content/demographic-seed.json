@@ -1,0 +1,15 @@
+{
+  "_comment": "Optional. The demographic charts are driven by data/demographic.json, built from the Sheet, but that file does not exist until the pipeline has run once. This is the copy the page draws immediately so the charts are never blank on a first load, and it is replaced the moment the generated file arrives. Same shape as data/demographic.json, so the easiest way to fill it is to run the pipeline once and copy the result in. Set the demographics section's _source to null, or delete this file, to skip it.",
+
+  "years": ["TODO 2016", "TODO 2021", "TODO 2026"],
+  "order": {
+    "TODO Age": ["TODO 18–29", "TODO 30–44"]
+  },
+  "data": {
+    "TODO Age": {
+      "TODO 18–29": {
+        "TODO CODE": { "TODO 2016": 0, "TODO 2021": 0 }
+      }
+    }
+  }
+}

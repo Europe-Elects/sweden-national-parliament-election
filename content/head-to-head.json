@@ -1,0 +1,15 @@
+{
+  "_comment": "Candidate-against-candidate polling: preferred prime minister, preferred first minister, a presidential run-off pairing. `key` is any short identifier used in `values`. Give a candidate either a `party` code, which takes that party's colour, or an explicit `color` — the none/don't-know series usually wants an explicit grey.",
+  "candidates": [
+    { "key": "a", "label": "TODO Candidate Name (PARTY)", "party": "TODO CODE" },
+    { "key": "b", "label": "TODO Candidate Name (PARTY)", "party": "TODO CODE" },
+    { "key": "none", "label": "None / don't know", "color": "#9aa0a6" }
+  ],
+  "polls": [
+    {
+      "date": "TODO YYYY-MM-DD",
+      "pollster": "TODO Pollster",
+      "values": { "a": 0, "b": 0, "none": 0 }
+    }
+  ]
+}

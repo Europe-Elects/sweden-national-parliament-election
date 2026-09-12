@@ -1,0 +1,1079 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Election</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.0/chart.umd.min.js" integrity="sha512-SIMGYRUjwY8+gKg7nn9EItdD8LCADSDfJNutF9TPrvEo86sQmFMh6MyralfIyhADlajSxqc7G0gs7+MwWF/ogQ==" crossorigin="anonymous" referrerpolicy="no-referrer"></script>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin="">
+<link href="https://fonts.googleapis.com/css2?family=Advent+Pro:wght@400;500;600;700;800&amp;display=swap" rel="stylesheet">
+<style>
+  :root{
+    --navy:#1a2b4a;
+    --navy-dark:#101c31;
+    --gold:#ffcc00;
+    --bg:#f4f3ee;
+    --card:#ffffff;
+    --text:#1c1e22;
+    --muted:#6b7280;
+    --border:#e4e1d7;
+    --green:#1a7a3c;
+    --red:#c0392b;
+  }
+  *{box-sizing:border-box;}
+  body{margin:0;background:var(--bg);color:var(--text);font-family:'Advent Pro',-apple-system,BlinkMacSystemFont,'Segoe UI',Helvetica,Arial,sans-serif;font-weight:500;line-height:1.55;}
+  a{color:var(--navy);}
+  .wrap{max-width:1040px;margin:0 auto;padding:0 18px 70px;}
+
+  .callout{display:flex;align-items:center;justify-content:space-between;background:var(--navy);padding:11px 16px;border-radius:3px;text-decoration:none;margin:34px 0 16px;}
+  .callout .label{font-size:15px;font-weight:700;letter-spacing:0.07em;text-transform:uppercase;color:#fff;}
+  .callout .more{font-size:15px;color:var(--gold);white-space:nowrap;margin-left:12px;}
+  .callout.title{margin-top:26px;}
+  .callout.title .label{font-size:19px;}
+
+  .accordion{margin:34px 0 16px;}
+  .accordion summary{list-style:none;cursor:pointer;}
+  .accordion summary::-webkit-details-marker{display:none;}
+  .accordion summary.callout{margin:0;}
+  .accordion .chevron{color:var(--gold);font-size:13px;transition:transform .2s ease;display:inline-block;margin-left:10px;}
+  .accordion[open] .chevron{transform:rotate(180deg);}
+  .accordion-body{padding-top:16px;}
+  .accordion + .accordion{margin-top:16px;}
+
+  .hero-meta{display:flex;gap:22px;flex-wrap:wrap;margin:14px 0 4px;font-size:13px;color:var(--muted);}
+  .hero-meta strong{color:var(--text);display:block;font-size:15px;}
+
+  p{color:#2b2d33;font-size:15px;}
+  mark{background:#ffe388;padding:0 3px;border-radius:2px;}
+
+  .cand-grid{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-top:10px;}
+  .cand{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:14px;}
+  .cand h4{margin:0 0 8px;font-size:15px;display:inline-block;padding:3px 8px;border-radius:4px;color:#fff;}
+  .cand .party-tag{font-size:11px;font-weight:700;letter-spacing:.04em;text-transform:uppercase;color:var(--muted);margin-bottom:8px;display:block;}
+  .cand p{font-size:12.5px;color:var(--muted);margin:0;}
+
+  .card{background:var(--card);border:1px solid var(--border);border-radius:8px;padding:18px 20px 20px;margin-top:2px;}
+  .card + .card{margin-top:16px;}
+  .card h3{margin:0 0 2px;font-size:16px;}
+  .card .sub{font-size:12.5px;color:var(--muted);margin-bottom:14px;}
+  .updated{font-size:11px;color:var(--muted);display:flex;align-items:center;gap:5px;margin-bottom:14px;}
+  .updated .pulse{width:7px;height:7px;border-radius:50%;background:#22a35a;display:inline-block;}
+
+  .swatch{width:11px;height:11px;border-radius:2px;display:inline-block;}
+
+  .barrow{display:grid;grid-template-columns:118px 1fr 78px;align-items:center;gap:10px;margin:9px 0;}
+  .barrow .name{font-size:13px;font-weight:700;}
+  .barrow .track{background:#eeece4;border-radius:4px;height:20px;position:relative;overflow:hidden;}
+  .barrow .fill{height:100%;border-radius:4px;}
+  .barrow .val{font-size:13px;font-weight:700;text-align:right;}
+  .barrow .val small{font-weight:500;color:var(--muted);font-size:11px;display:block;}
+  .threshold-note{font-size:11.5px;color:var(--muted);margin-top:6px;}
+
+  table{width:100%;border-collapse:collapse;font-size:12.5px;}
+  th,td{padding:7px 6px;text-align:right;border-bottom:1px solid var(--border);}
+  th:first-child,td:first-child{text-align:left;}
+  thead th{color:var(--muted);font-weight:600;font-size:11px;text-transform:uppercase;letter-spacing:.03em;}
+  tbody tr:hover{background:#faf9f5;}
+  .euro-tag{font-size:10.5px;font-weight:700;color:#fff;padding:2px 7px;border-radius:10px;display:inline-block;}
+
+  .placeholder{border:1.5px dashed var(--border);border-radius:8px;padding:26px 18px;text-align:center;color:var(--muted);font-size:13px;}
+
+  .demo-controls{display:flex;gap:10px;flex-wrap:wrap;margin-bottom:16px;}
+  .demo-controls label{display:flex;flex-direction:column;gap:4px;font-size:11px;font-weight:700;color:var(--muted);text-transform:uppercase;letter-spacing:.03em;}
+  .demo-controls select{font-family:inherit;font-size:14px;font-weight:600;color:var(--text);background:#faf9f5;border:1px solid var(--border);border-radius:6px;padding:8px 10px;min-width:170px;cursor:pointer;}
+  .demo-controls select:focus-visible{outline:2px solid var(--navy);outline-offset:1px;}
+  .demo-note{font-size:11.5px;color:var(--muted);margin-top:10px;}
+
+  canvas{max-width:100%;}
+  .iframe-embed{width:100%;overflow:hidden;}
+  .iframe-embed iframe{width:100%;border:none;display:block;}
+  .embed-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
+  .embed-row .card{margin-top:0;}
+  .chart-box{height:460px;}
+
+  .fatal{border:1.5px solid var(--red);border-radius:8px;padding:18px;margin:34px 0;color:var(--red);font-size:13px;background:#fff;}
+  .fatal code{background:#f4f3ee;padding:1px 4px;border-radius:3px;}
+
+  footer{margin-top:50px;padding-top:20px;border-top:1px solid var(--border);font-size:12px;color:var(--muted);}
+  footer a{color:var(--muted);}
+  footer .foot-links{margin-bottom:10px;}
+  footer .foot-links a{margin-right:14px;}
+
+  @media (max-width:640px){
+    .cand-grid{grid-template-columns:1fr 1fr;}
+    .barrow{grid-template-columns:88px 1fr 62px;}
+    table{font-size:11px;}
+    th,td{padding:6px 3px;}
+    .demo-controls select{min-width:140px;}
+    .embed-row{grid-template-columns:1fr;}
+  }
+  @media (max-width:420px){.cand-grid{grid-template-columns:1fr;}}
+</style>
+</head>
+<body>
+<div class="wrap" id="page"></div>
+
+<script>
+/* Built entirely from config.json, data/parties.json and content/*.json. No
+   election-specific value belongs in this file — wanting to edit it for one
+   page means a config key is missing.
+
+   Section order is the key order of config.sections. A null section is not
+   rendered and its content file is never fetched. */
+
+Chart.defaults.font.family = "'Advent Pro', sans-serif";
+Chart.defaults.font.weight = '600';
+
+/* ---------- small helpers ---------- */
+
+const esc = s => String(s == null ? '' : s).replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+const fmt = n => (Math.round(n * 10) / 10).toString().replace('.0', '') + '%';
+const fmtPP = n => (n >= 0 ? '+' : '') + (Math.round(n * 10) / 10).toString().replace('.0', '') + 'pp';
+const fmtN = (n, d) => n.toFixed(d) + '%';
+const fmtPPN = (n, d) => (n >= 0 ? '+' : '') + n.toFixed(d) + 'pp';
+
+function parseNum(v){
+  const n = parseFloat(String(v == null ? '' : v).replace('%', '').replace(',', '.'));
+  return isNaN(n) ? null : n;
+}
+const isoTime = d => { const [y, m, dd] = String(d).split('-').map(Number); return new Date(y, (m || 1) - 1, dd || 1).getTime(); };
+const shortDate = ms => new Date(ms).toLocaleDateString('en-GB', {day:'2-digit', month:'short', year:'numeric'});
+
+/* _-prefixed keys are notes, EXAMPLE entries are samples. Neither is data. */
+function clean(value){
+  if (Array.isArray(value)) return value.map(clean);
+  if (value && typeof value === 'object') {
+    const out = {};
+    for (const [k, v] of Object.entries(value)) {
+      if (k.startsWith('_') || /^EXAMPLE\b/i.test(k) || k === '$schema') continue;
+      out[k] = clean(v);
+    }
+    return out;
+  }
+  return value;
+}
+
+/* Rendering an unreplaced value verbatim would put "TODO ..." on a live page,
+   so it renders as nothing and is reported in the console. */
+const TODOS = new Set();
+function txt(value){
+  /* Not \b — the shipped chart ids are TODO01, TODO02 … and there is no word
+     boundary between TODO and a digit. */
+  if (typeof value === 'string' && /^TODO(?![A-Za-z])/.test(value.trim())) { TODOS.add(value); return ''; }
+  return value == null ? '' : String(value);
+}
+const has = v => txt(v) !== '';
+
+async function getJSON(path, {required = false} = {}){
+  const res = await fetch(path, {cache: 'no-store'});
+  if (!res.ok) {
+    if (required) throw new Error(`${path}: HTTP ${res.status}`);
+    return null;
+  }
+  return clean(await res.json());
+}
+
+/* ---------- state ---------- */
+
+let CONFIG = null, PARTIES = null, CONTENT = {};
+const charts = {};                       // live Chart.js instances, by key
+const dataStatus = {mode: 'none', updated: null};
+let pollCycle = 0, pollFailures = 0;
+
+const section = name => (CONFIG.sections && CONFIG.sections[name]) || null;
+const enabled = name => { const s = section(name); return !!(s && typeof s === 'object' && Object.keys(s).length); };
+
+/* Escaping cannot make an arbitrary CSS value safe inside a style attribute.
+   parties.js filters these on the way in; this is the same check at the point
+   of use, since that file is generated and this one renders. */
+const HEX = /^#[0-9a-fA-F]{6}$/;
+const safeColor = c => (HEX.test(String(c || '')) ? String(c) : '#999999');
+
+function partyMeta(code){
+  const found = (PARTIES.parties && PARTIES.parties[code]) || {
+    ...PARTIES.others, code: code || PARTIES.others.code, euro: '—', baseline: null,
+  };
+  return {...found, color: safeColor(found.color)};
+}
+/* Light fills need a darker text colour when used as a label, not a swatch. */
+function labelColor(meta){
+  return meta.dark ? '#a68a00' : meta.color;
+}
+function onColor(meta){
+  return meta.dark ? '#1c1e22' : '#ffffff';
+}
+
+/* Mirrors scripts/lib/parties.js. */
+const COMBINING = new RegExp('[' + String.fromCharCode(0x300) + '-' + String.fromCharCode(0x36f) + ']', 'g');
+function aliasKeys(label){
+  const base = String(label || '').toLowerCase().replace(/\s*\([^)]*\)\s*$/, '').replace(/\s+/g, ' ').trim();
+  if (!base) return [];
+  const expanded = base
+    .replace(/ä/g,'ae').replace(/ö/g,'oe').replace(/ü/g,'ue').replace(/ß/g,'ss')
+    .replace(/ø/g,'oe').replace(/å/g,'aa').replace(/æ/g,'ae');
+  return [...new Set([expanded, base.normalize('NFD').replace(COMBINING, '')])];
+}
+let ALIAS_INDEX = null;
+function matchParty(label){
+  if (!ALIAS_INDEX) {
+    ALIAS_INDEX = new Map();
+    for (const code of Object.keys(PARTIES.parties)) {
+      for (const a of PARTIES.parties[code].aliases || []) if (!ALIAS_INDEX.has(a)) ALIAS_INDEX.set(a, code);
+    }
+  }
+  for (const k of aliasKeys(label)) if (ALIAS_INDEX.has(k)) return {code: ALIAS_INDEX.get(k), meta: PARTIES.parties[ALIAS_INDEX.get(k)]};
+  return {code: PARTIES.others.code, meta: PARTIES.others};
+}
+
+/* ---------- building blocks ---------- */
+
+/* Trust boundary. Four fields render as HTML so an editor can put a link in a
+   caption: a section's `sub` and `note`, a context paragraph, a candidate
+   `bio`. They come from repository files, and anyone who can change those can
+   change this one, so escaping them buys nothing.
+
+   The Google Sheet is different — it is shared far more widely than repository
+   write access. Everything from that path is escaped with esc() or coerced
+   through parseNum(), and colours are filtered to a plain hex. Keep it so. */
+function band(label){
+  return has(label) ? `<div class="callout"><span class="label">${esc(txt(label))}</span></div>` : '';
+}
+function cardHead(cfg){
+  return (has(cfg.heading) ? `<h3>${esc(txt(cfg.heading))}</h3>` : '')
+       + (has(cfg.sub) ? `<div class="sub">${txt(cfg.sub)}</div>` : '');
+}
+function note(cfg){
+  return has(cfg.note) ? `<p class="threshold-note">${txt(cfg.note)}</p>` : '';
+}
+function embed(chart){
+  if (!chart || !chart.id || /^TODO/i.test(chart.id)) return '';
+  const src = `https://datawrapper.dwcdn.net/${encodeURIComponent(chart.id)}/${chart.version || 1}/`;
+  return `<div class="iframe-embed"><iframe title="${esc(txt(chart.label))}" aria-label="${esc(chart.ariaLabel || 'Chart')}" id="datawrapper-chart-${esc(chart.id)}" src="${esc(src)}" scrolling="no" frameborder="0" height="${Number(chart.height) || 400}" data-external="1"></iframe></div>`;
+}
+function embedGrid(chartList){
+  const items = (chartList || []).filter(c => c && c.id && !/^TODO/i.test(c.id));
+  if (!items.length) return '';
+  if (items.length === 1) return embed(items[0]);
+  return `<div class="embed-row">${items.map(c => `
+    <div class="card">
+      ${has(c.label) ? `<div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(txt(c.label))}</div>` : ''}
+      ${embed(c)}
+    </div>`).join('')}</div>`;
+}
+
+/* Shared by the poll series and the head-to-head, which differ only in where
+   the series colours come from. */
+function pollScatter(canvasId, series, rows, yMax){
+  const byTime = {};
+  rows.forEach(r => { byTime[isoTime(r.date)] = r; });
+
+  const datasets = series.map(s => ({
+    label: s.label,
+    data: rows.filter(r => r.values && r.values[s.key] != null)
+              .map(r => ({x: isoTime(r.date), y: r.values[s.key]})),
+    borderColor: s.color,
+    backgroundColor: s.color,
+    showLine: false,
+    pointRadius: 3.5,
+    pointHoverRadius: 5,
+  })).filter(d => d.data.length);
+
+  const xs = datasets.flatMap(d => d.data.map(p => p.x));
+  if (!xs.length) return null;
+
+  if (charts[canvasId]) charts[canvasId].destroy();
+  charts[canvasId] = new Chart(document.getElementById(canvasId), {
+    type: 'scatter',
+    data: {datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {mode: 'nearest', intersect: false},
+      plugins: {
+        legend: {position: 'bottom', labels: {boxWidth: 11, font: {size: 11}}},
+        tooltip: {callbacks: {
+          title: items => {
+            if (!items.length) return '';
+            const r = byTime[items[0].parsed.x];
+            const d = shortDate(items[0].parsed.x);
+            return r && r.pollster ? `${r.pollster} · ${d}` : d;
+          },
+          afterTitle: items => {
+            const r = items.length ? byTime[items[0].parsed.x] : null;
+            return r && r.fieldwork ? `Fieldwork: ${r.fieldwork}` : '';
+          },
+          label: ctx => ctx.dataset.label + ': ' + ctx.parsed.y + '%',
+        }},
+      },
+      scales: {
+        x: {type: 'linear', min: Math.min(...xs), max: Math.max(...xs),
+            ticks: {maxTicksLimit: 12, font: {size: 9.5}, callback: v => shortDate(v)},
+            grid: {display: false}},
+        y: {min: 0, max: yMax || undefined,
+            ticks: {callback: v => v + '%', font: {size: 10}}, grid: {color: '#eeece4'}},
+      },
+    },
+  });
+  return charts[canvasId];
+}
+
+/* The content file's own list if it gives one, else every party appearing in
+   at least one row. */
+function pollSeries(content){
+  const codes = (content.parties && content.parties.length)
+    ? content.parties
+    : [...new Set((content.polls || []).flatMap(p => Object.keys(p.values || {})))];
+  return codes.map(code => {
+    const meta = partyMeta(code);
+    return {key: code, label: meta.name, color: meta.color};
+  });
+}
+
+/* ---------- section renderers ----------
+   Each returns HTML, or '' to render nothing. Anything needing a live canvas
+   registers a callback on `after`. */
+
+const RENDER = {};
+
+RENDER.context = (cfg, after, content) => {
+  const paras = (content && content.paragraphs || []).map(txt).filter(Boolean);
+  if (!paras.length) return '';
+  return `<details class="accordion"${cfg.open ? ' open' : ''}>
+    <summary class="callout"><span class="label">${esc(txt(cfg.label) || 'Context')}</span><span class="chevron">▾</span></summary>
+    <div class="accordion-body">${paras.map(p => `<p>${p}</p>`).join('')}</div>
+  </details>`;
+};
+
+RENDER.candidates = (cfg, after, content) => {
+  const items = (content && content.items || []).filter(c => has(c.name));
+  if (!items.length) return '';
+  const cards = items.map(c => {
+    const meta = partyMeta(txt(c.party));
+    return `<div class="cand">
+      <h4 style="background:${esc(meta.color)};color:${onColor(meta)}">${esc(txt(c.name))}</h4>
+      <span class="party-tag">${esc(meta.name)}${has(c.role) ? ' · ' + esc(txt(c.role)) : ''}</span>
+      ${has(c.bio) ? `<p>${txt(c.bio)}</p>` : ''}
+    </div>`;
+  }).join('');
+  return `<details class="accordion"${cfg.open ? ' open' : ''}>
+    <summary class="callout"><span class="label">${esc(txt(cfg.label) || 'Lead Candidates')}</span><span class="chevron">▾</span></summary>
+    <div class="accordion-body"><div class="cand-grid">${cards}</div></div>
+  </details>`;
+};
+
+RENDER.results = cfg => band(cfg.label) + `<div class="card">
+  ${cardHead(cfg)}
+  <div class="updated dataStatus"></div>
+  <table id="resultsTable"></table>
+</div>`;
+
+RENDER.projections = cfg => {
+  const grid = embedGrid(cfg.charts);
+  if (!grid) return '';
+  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${grid}${note(cfg)}</div>`;
+};
+
+RENDER.exitVotes = cfg => band(cfg.label) + `<div class="card">
+  ${cardHead(cfg)}
+  <div class="updated dataStatus"></div>
+  <div id="exitVotesWrap"><div class="placeholder">Loading exit poll data…</div></div>
+</div>`;
+
+RENDER.exitSeats = cfg => band(cfg.label) + `<div class="card">
+  ${cardHead(cfg)}
+  <div id="exitSeatsWrap"><div class="placeholder">Loading exit poll data…</div></div>
+</div>`;
+
+RENDER.turnout = cfg => {
+  const e = embed(cfg.chart);
+  if (!e) return '';
+  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${e}${note(cfg)}</div>`;
+};
+
+RENDER.previousResult = (cfg, after, content) => {
+  const rows = (content && content.rows || []).filter(r => parseNum(r.votePercent) != null);
+  if (!rows.length) return '';
+  const max = Math.max(...rows.map(r => Number(r.votePercent)));
+  const bars = rows.map(r => {
+    const meta = partyMeta(txt(r.party));
+    return `<div class="barrow">
+      <div class="name" style="color:${labelColor(meta)}">${esc(meta.name)}</div>
+      <div class="track"><div class="fill" style="width:${Number(r.votePercent) / max * 100}%;background:${esc(meta.color)}"></div></div>
+      <div class="val">${fmt(Number(r.votePercent))}${r.seats != null ? `<small>${esc(r.seats)} seats</small>` : ''}</div>
+    </div>`;
+  }).join('');
+  return `<details class="accordion"${cfg.open ? ' open' : ''}>
+    <summary class="callout"><span class="label">${esc(txt(cfg.label) || 'Previous Result')}</span><span class="chevron">▾</span></summary>
+    <div class="accordion-body"><div class="card">${cardHead(cfg)}${bars}</div></div>
+  </details>`;
+};
+
+function pollSection(id, cfg, after, content){
+  const rows = (content && content.polls || []).filter(p => /^\d{4}-\d{2}-\d{2}$/.test(String(p.date)));
+  if (!rows.length) return '';
+  const series = pollSeries(content);
+  after(() => pollScatter(id, series, rows, cfg.yMax));
+  return band(cfg.label) + `<div class="card">
+    ${cardHead(cfg)}
+    <div class="chart-box"><canvas id="${id}"></canvas></div>
+    ${note(cfg)}
+  </div>`;
+}
+RENDER.polling = (cfg, after, content) => pollSection('pollingChart', cfg, after, content);
+RENDER.pollingHistory = (cfg, after, content) => pollSection('pollingHistoryChart', cfg, after, content);
+
+RENDER.headToHead = (cfg, after, content) => {
+  const rows = (content && content.polls || []).filter(p => /^\d{4}-\d{2}-\d{2}$/.test(String(p.date)));
+  const cands = (content && content.candidates || []).filter(c => c && c.key);
+  if (!rows.length || !cands.length) return '';
+  const series = cands.map(c => ({
+    key: c.key,
+    label: txt(c.label) || c.key,
+    color: c.color || partyMeta(txt(c.party)).color,
+  }));
+  after(() => pollScatter('headToHeadChart', series, rows, cfg.yMax));
+  return band(cfg.label) + `<div class="card">
+    ${cardHead(cfg)}
+    <div class="chart-box" style="height:400px"><canvas id="headToHeadChart"></canvas></div>
+    ${note(cfg)}
+  </div>`;
+};
+
+RENDER.coalitions = cfg => {
+  const grid = embedGrid(cfg.charts);
+  if (!grid) return '';
+  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${grid}${note(cfg)}</div>`;
+};
+
+RENDER.history = cfg => {
+  const items = (cfg.charts || []).filter(c => c && c.id && !/^TODO/i.test(c.id));
+  if (!items.length) return '';
+  const inner = items.map(c => `<div class="card" style="margin-top:0;">
+      ${has(c.label) ? `<div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(txt(c.label))}</div>` : ''}
+      ${embed(c)}
+    </div>`).join('');
+  return band(cfg.label) + `<div class="card">${cardHead(cfg)}${inner}${note(cfg)}</div>`;
+};
+
+RENDER.demographics = (cfg, after, content) => {
+  const panels = Math.max(1, Number(cfg.panels) || 1);
+  if (content) DEMO = content;
+  after(() => initDemographics(cfg, panels));
+  const cards = Array.from({length: panels}, (_, i) => {
+    const n = i + 1;
+    return `<div class="card">
+      ${cardHead(cfg)}
+      <div class="demo-controls">
+        <label for="demoCategory${n}">Group <select id="demoCategory${n}"></select></label>
+        <label for="demoSubgroup${n}">Subgroup <select id="demoSubgroup${n}"></select></label>
+      </div>
+      <div class="chart-box" style="height:380px"><canvas id="demoChart${n}"></canvas></div>
+      <p class="demo-note" id="demoNote${n}"></p>
+    </div>`;
+  }).join('');
+  return band(cfg.label) + (panels > 1 ? `<div class="embed-row">${cards}</div>` : cards);
+};
+
+RENDER.records = (cfg, after, content) => {
+  const blocks = (content && content.blocks || []).filter(b => b && (b.rows || []).length);
+  if (!blocks.length) return '';
+  after(() => blocks.forEach(renderRecordBlock));
+  return blocks.map(b => band(b.label) + `<div class="card">
+    ${cardHead(b)}
+    <div id="record-${esc(b.id)}"></div>
+    ${note(b)}
+  </div>`).join('');
+};
+
+/* ---------- records ---------- */
+
+const recordFormat = b => (b.format === 'pp' ? fmtPP : fmt);
+
+function renderRecordBlock(b){
+  const el = document.getElementById('record-' + b.id);
+  if (!el) return;
+  const meta = partyMeta(txt(b.party));
+  const max = Number(b.max) || Math.max(...b.rows.map(r => Math.abs(Number(r.value)))) * 1.15;
+  const f = recordFormat(b);
+
+  const bars = b.rows.map(r => `
+    <div class="barrow" style="grid-template-columns:34px 100px 1fr 60px;">
+      <div class="name" style="color:var(--muted)">#${esc(r.rank)}</div>
+      <div class="name">${esc(txt(r.where))}<br><span style="font-weight:400;color:var(--muted);font-size:11px">${esc(r.year)}</span></div>
+      <div class="track"><div class="fill" style="width:${Math.abs(Number(r.value)) / max * 100}%;background:${esc(meta.color)}"></div></div>
+      <div class="val">${f(Number(r.value))}</div>
+    </div>`).join('');
+
+  const p = b.pending;
+  const pending = p ? `
+    <div class="barrow" id="pending-${esc(b.id)}" style="grid-template-columns:34px 100px 1fr 60px;margin-top:14px;">
+      <div class="name" style="color:var(--muted)">?</div>
+      <div class="name">${esc(txt(p.label))}<br><span style="font-weight:400;color:var(--muted);font-size:11px">${esc(currentYear())}</span></div>
+      <div class="track" style="border:1.5px dashed ${esc(meta.color)};background:transparent;"><div class="fill" style="width:${Math.abs(Number(p.value) || 0) / max * 100}%;background:repeating-linear-gradient(45deg,${esc(meta.color)},${esc(meta.color)} 6px,#ffffff00 6px,#ffffff00 10px);opacity:.55"></div></div>
+      <div class="val" style="color:${esc(meta.color)}">pending<small>polling ${f(Number(p.value) || 0)}</small></div>
+    </div>` : '';
+
+  el.innerHTML = bars + pending;
+}
+
+function currentYear(){
+  const iso = CONFIG.election && CONFIG.election.date && CONFIG.election.date.iso;
+  return /^\d{4}/.test(String(iso)) ? String(iso).slice(0, 4) : '';
+}
+
+/* Once the exit poll is published, the dashed row becomes a real one. */
+async function updateRecordPending(){
+  const content = CONTENT.records;
+  if (!content || !lastExitVotesRows) return;
+  for (const b of (content.blocks || [])) {
+    const p = b.pending;
+    if (!p || !has(p.institute)) continue;
+    const value = exitValueFor(txt(b.party), txt(p.institute));
+    if (value == null) continue;
+
+    const meta = partyMeta(txt(b.party));
+    const max = Number(b.max) || 100;
+    const f = recordFormat(b);
+    const shown = b.format === 'pp' && p.baseline != null ? value - Number(p.baseline) : value;
+    const row = document.getElementById('pending-' + b.id);
+    if (!row) continue;
+    row.outerHTML = `
+      <div class="barrow" id="pending-${esc(b.id)}" style="grid-template-columns:34px 100px 1fr 60px;margin-top:14px;">
+        <div class="name" style="color:var(--muted)">★</div>
+        <div class="name">${esc(txt(p.label))}<br><span style="font-weight:400;color:var(--muted);font-size:11px">${esc(currentYear())} · ${esc(txt(p.institute))} exit poll</span></div>
+        <div class="track"><div class="fill" style="width:${Math.min(Math.abs(shown) / max * 100, 100)}%;background:${esc(meta.color)}"></div></div>
+        <div class="val">${f(shown)}</div>
+      </div>`;
+  }
+}
+
+/* ---------- demographics ---------- */
+
+let DEMO = null;
+let demoSig = null;
+
+function initDemographics(cfg, panels){
+  if (!DEMO || !DEMO.order || !Object.keys(DEMO.order).length) return;
+  for (let n = 1; n <= panels; n++) {
+    const cat = document.getElementById('demoCategory' + n);
+    const sub = document.getElementById('demoSubgroup' + n);
+    if (!cat || cat.dataset.bound) continue;
+    cat.dataset.bound = '1';
+    cat.addEventListener('change', () => { fillSubgroups(n); drawDemo(cfg, n); });
+    sub.addEventListener('change', () => drawDemo(cfg, n));
+  }
+  refreshDemoOptions(cfg, panels);
+}
+
+function fillSubgroups(n){
+  const cat = document.getElementById('demoCategory' + n).value;
+  const sub = document.getElementById('demoSubgroup' + n);
+  const subs = DEMO.order[cat] || [];
+  sub.innerHTML = subs.map(s => `<option value="${esc(s)}">${esc(s)}</option>`).join('');
+}
+
+/* Rebuilt rather than re-created, so the reader's selection survives a refresh
+   mid-evening. */
+function refreshDemoOptions(cfg, panels){
+  const categories = Object.keys(DEMO.order);
+  if (!categories.length) return;
+  const defaults = cfg.defaultCategories || [];
+  for (let n = 1; n <= panels; n++) {
+    const cat = document.getElementById('demoCategory' + n);
+    const sub = document.getElementById('demoSubgroup' + n);
+    if (!cat || !sub) continue;
+    const prevCat = cat.value, prevSub = sub.value;
+    cat.innerHTML = categories.map(c => `<option value="${esc(c)}">${esc((cfg.categoryLabels || {})[c] || c)}</option>`).join('');
+    const wanted = prevCat || defaults[n - 1] || categories[(n - 1) % categories.length];
+    cat.value = categories.includes(wanted) ? wanted : categories[0];
+    fillSubgroups(n);
+    const subs = DEMO.order[cat.value] || [];
+    sub.value = subs.includes(prevSub) ? prevSub : subs[0];
+    drawDemo(cfg, n);
+  }
+}
+
+function drawDemo(cfg, n){
+  const cat = document.getElementById('demoCategory' + n).value;
+  const sub = document.getElementById('demoSubgroup' + n).value;
+  const byParty = ((DEMO.data || {})[cat] || {})[sub];
+  if (!byParty) return;
+  const years = DEMO.years || [];
+
+  /* Follows data/parties.json so the legend matches every other chart. */
+  const known = (PARTIES.order || []).filter(c => byParty[c]);
+  const rest = Object.keys(byParty).filter(c => !known.includes(c));
+  const datasets = [...known, ...rest].map(code => {
+    const meta = partyMeta(code);
+    return {
+      label: meta.name,
+      data: years.map(y => byParty[code][y] ?? null),
+      borderColor: meta.color,
+      backgroundColor: meta.color,
+      /* A missing year means the group was not asked about, not a zero. */
+      spanGaps: false,
+      pointRadius: years.map(y => byParty[code][y] != null ? 4 : 0),
+      pointHoverRadius: 6,
+      borderWidth: 2.5,
+      tension: 0.2,
+    };
+  });
+
+  const id = 'demoChart' + n;
+  if (charts[id]) charts[id].destroy();
+  charts[id] = new Chart(document.getElementById(id), {
+    type: 'line',
+    data: {labels: years, datasets},
+    options: {
+      responsive: true,
+      maintainAspectRatio: false,
+      interaction: {mode: 'index', intersect: false},
+      plugins: {
+        legend: {position: 'bottom', labels: {boxWidth: 11, font: {size: 11}}},
+        tooltip: {callbacks: {label: ctx => ctx.dataset.label + ': ' + (ctx.parsed.y != null ? ctx.parsed.y + '%' : 'not fielded')}},
+      },
+      scales: {
+        x: {grid: {display: false}},
+        y: {min: 0, max: cfg.yMax || undefined, ticks: {callback: v => v + '%'}, grid: {color: '#eeece4'}},
+      },
+    },
+  });
+
+  const noteEl = document.getElementById('demoNote' + n);
+  if (noteEl) noteEl.textContent = (cfg.categoryNotes || {})[cat] || '';
+}
+
+async function refreshDemographic(){
+  if (!enabled('demographics')) return true;
+  try {
+    const j = await getJSON('data/demographic.json');
+    if (!j || !j.data || !j.order || !Array.isArray(j.years)) return true;
+    const sig = JSON.stringify([j.order, j.data]);
+    if (sig === demoSig) return true;
+    demoSig = sig;
+    DEMO = j;
+    refreshDemoOptions(section('demographics'), Math.max(1, Number(section('demographics').panels) || 1));
+    return true;
+  } catch (e) {
+    return false;
+  }
+}
+
+/* ---------- live data ---------- */
+
+const sheetCsvUrl = tab =>
+  `https://docs.google.com/spreadsheets/d/${CONFIG.sheet.id}/gviz/tq?tqx=out:csv&sheet=${encodeURIComponent(tab)}`;
+
+function parseCSV(text){
+  return text.trim().split(/\r?\n/).filter(l => l.length).map(line => {
+    const cells = []; let cur = '', inQ = false;
+    for (let i = 0; i < line.length; i++) {
+      const ch = line[i];
+      if (ch === '"') { if (inQ && line[i + 1] === '"') { cur += '"'; i++; } else inQ = !inQ; }
+      else if (ch === ',' && !inQ) { cells.push(cur); cur = ''; }
+      else cur += ch;
+    }
+    cells.push(cur);
+    return cells.map(c => c.trim());
+  });
+}
+
+async function fetchSheetTab(tab){
+  const res = await fetch(sheetCsvUrl(tab));
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  const text = new TextDecoder('utf-8').decode(await res.arrayBuffer());
+  const rows = parseCSV(text);
+  if (rows.length < 2) throw new Error('no data rows');
+  return rows;
+}
+
+async function fetchData(path){
+  const every = CONFIG.automation.pollIntervalMs || 25000;
+  const res = await fetch(`${path}?t=${Math.floor(Date.now() / every)}`, {cache: 'no-store'});
+  if (!res.ok) throw new Error('HTTP ' + res.status);
+  return res.json();
+}
+
+/* The Sheet is a fallback only until the pipeline has produced real figures.
+   After that, falling back to an older snapshot would visibly rewind results
+   mid-count. */
+const lastSheetRows = {votes: null, seats: null};
+const jsonProven = {votes: false, seats: false};
+let lastExitVotesRows = null;
+
+async function loadExit(kind){
+  const file = kind === 'votes' ? 'data/exitVotes.json' : 'data/exitSeats.json';
+  const tab = CONFIG.sheet.tabs[kind === 'votes' ? 'exitVotes' : 'exitSeats'];
+  try {
+    const j = await fetchData(file);
+    if (j && j.published && Array.isArray(j.rows) && j.rows.length) {
+      jsonProven[kind] = true;
+      dataStatus.mode = 'json';
+      /* Oldest wins: if either feed has gone stale, the page has gone stale. */
+      if (j.updated && (!dataStatus.updated || Date.parse(j.updated) < Date.parse(dataStatus.updated))) {
+        dataStatus.updated = j.updated;
+      }
+      return [j.header, ...j.rows];
+    }
+  } catch (e) {
+    if (jsonProven[kind]) throw e;
+  }
+  if (jsonProven[kind]) throw new Error('pipeline is live; not reverting to the sheet');
+  if (!tab) throw Object.assign(new Error('no sheet tab configured'), {noData: true});
+
+  /* The Sheet sends no-store, so every reader polling it reaches Google
+     unbuffered. The JSON path is behind the Pages CDN and is cheap. */
+  const every = CONFIG.automation.sheetFallbackEvery || 4;
+  if (pollCycle % every !== 1 && lastSheetRows[kind]) return lastSheetRows[kind];
+  const rows = await fetchSheetTab(tab);
+  lastSheetRows[kind] = rows;
+  if (dataStatus.mode !== 'json') dataStatus.mode = 'sheet';
+  return rows;
+}
+
+function exitValueFor(partyCode, institute){
+  const rows = lastExitVotesRows;
+  if (!rows) return null;
+  const header = rows[0], body = rows.slice(1).filter(r => r[0]);
+  const needle = institute.toLowerCase();
+  const row = body.find(r => (r[0] || '').toLowerCase().includes(needle));
+  if (!row) return null;
+  for (let i = 1; i < header.length; i++) {
+    if (header[i] && matchParty(header[i]).code === partyCode) return parseNum(row[i]);
+  }
+  return null;
+}
+
+/* One chart per institute, sharing a y-axis maximum so panels stay comparable. */
+function renderExitCharts(el, rows, cfg){
+  const header = rows[0];
+  const body = rows.slice(1).filter(r => r[0]);
+  if (!body.some(r => r.slice(1).some(v => parseNum(v) != null))) {
+    throw Object.assign(new Error('not published yet'), {noData: true});
+  }
+
+  const cols = header.slice(1).map(matchParty);
+  const labels = cols.map(c => c.meta.name);
+  const colors = cols.map(c => c.meta.color);
+  const series = body.map(r => r.slice(1).map(parseNum));
+  const peak = Math.max(0, ...series.flat().filter(v => v != null));
+  const step = Number(cfg.axisStep) || 10;
+  const axisMax = Math.max(step, Math.ceil(peak * 1.1 / step) * step);
+
+  el.innerHTML = `<div class="embed-row">${body.map((r, i) => `
+    <div class="card">
+      <div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(r[0])}</div>
+      <canvas id="${cfg.idPrefix}${i}" height="240"></canvas>
+    </div>`).join('')}</div>`;
+
+  (charts[cfg.idPrefix] || []).forEach(c => c.destroy());
+  charts[cfg.idPrefix] = body.map((r, i) => new Chart(document.getElementById(cfg.idPrefix + i), {
+    type: 'bar',
+    data: {labels, datasets: [{label: r[0], data: series[i], backgroundColor: colors, borderRadius: 3}]},
+    options: {
+      responsive: true,
+      plugins: {legend: {display: false}, tooltip: {callbacks: {label: ctx => ctx.parsed.y + cfg.tipSuffix}}},
+      scales: {
+        y: {min: 0, max: axisMax, ticks: {callback: v => v + cfg.axisSuffix}, grid: {color: '#eeece4'}},
+        x: {grid: {display: false}, ticks: {font: {size: 9.5}, autoSkip: false, maxRotation: 60}},
+      },
+    },
+  }));
+}
+
+/* `sig` skips redundant redraws; `shown` stops a failed poll wiping a live chart. */
+const exitState = {votes: {sig: null, shown: false}, seats: {sig: null, shown: false}};
+
+async function renderExit(kind){
+  const name = kind === 'votes' ? 'exitVotes' : 'exitSeats';
+  if (!enabled(name)) return true;
+  const cfg = section(name);
+  const el = document.getElementById(kind === 'votes' ? 'exitVotesWrap' : 'exitSeatsWrap');
+  const st = exitState[kind];
+  if (!el) return true;
+
+  try {
+    const rows = await loadExit(kind);
+    if (kind === 'votes') lastExitVotesRows = rows;
+    const sig = JSON.stringify(rows);
+    if (sig !== st.sig) {
+      renderExitCharts(el, rows, {
+        idPrefix: kind === 'votes' ? 'exitVotesChart' : 'exitSeatsChart',
+        axisStep: cfg.axisStep,
+        axisSuffix: kind === 'votes' ? '%' : '',
+        tipSuffix: kind === 'votes' ? '%' : ' seats',
+      });
+      st.sig = sig; st.shown = true;
+      if (kind === 'votes') updateRecordPending();
+    }
+    return true;
+  } catch (e) {
+    if (!st.shown) el.innerHTML = `<div class="placeholder">${esc(txt(cfg.empty) || 'Figures will appear here once published.')}</div>`;
+    return e && e.noData === true;
+  }
+}
+
+/* ---------- results table ---------- */
+
+let resultsSig = null;
+
+function baselineFor(code){
+  const src = PARTIES.baselineSource || 'partiesdata';
+  if (src === 'none') return null;
+  if (src === 'content') {
+    const row = (CONTENT.previousResult && CONTENT.previousResult.rows || []).find(r => txt(r.party) === code);
+    return row ? parseNum(row.votePercent) : null;
+  }
+  return partyMeta(code).baseline;
+}
+
+function resultsTableHTML(live){
+  const cfg = section('results');
+  const d = Number(cfg.decimals) || 2;
+  const showBaseline = (PARTIES.baselineSource || 'partiesdata') !== 'none';
+  const prevLabel = (CONFIG.election.previous && CONFIG.election.previous.year) || 'Previous';
+  const pending = '<td style="color:var(--muted)">pending</td>';
+
+  const head = `<thead><tr>
+    <th>Party</th><th>Europarty (EU Group)</th>
+    ${showBaseline ? `<th>${esc(prevLabel)} result</th>` : ''}
+    <th>Result</th><th>+/-</th>
+  </tr></thead>`;
+
+  const body = (PARTIES.order || []).map(code => {
+    const m = partyMeta(code);
+    const r = live && live[code];
+    const base = showBaseline ? baselineFor(code) : null;
+    const cells = r
+      ? `<td>${fmtN(r.share, d)}${r.seats != null ? `<small style="color:var(--muted)"> · ${r.seats} seats</small>` : ''}</td>
+         <td style="color:${r.changeV > 0 ? 'var(--green)' : r.changeV < 0 ? 'var(--red)' : 'inherit'}">${r.changeV != null ? fmtPPN(r.changeV, d) : '—'}</td>`
+      : pending + pending;
+    return `<tr>
+      <td style="font-weight:700;color:${labelColor(m)}"><span class="swatch" style="background:${esc(m.color)}"></span>&nbsp;${esc(m.name)}</td>
+      <td><span class="euro-tag" style="background:${esc(m.color)};color:${onColor(m)}">${esc(m.euro)}</span></td>
+      ${showBaseline ? `<td>${base != null ? fmtN(base, d) : '—'}</td>` : ''}
+      ${cells}
+    </tr>`;
+  }).join('');
+
+  return head + `<tbody>${body}</tbody>`;
+}
+
+async function renderResults(){
+  if (!enabled('results')) return true;
+  const table = document.getElementById('resultsTable');
+  if (!table) return true;
+
+  let live = null, ok = true;
+  try {
+    const j = await fetchData('data/results.json');
+    if (j && j.counting && Array.isArray(j.parties)) {
+      live = {};
+      for (const p of j.parties) if (p.code && p.reported) live[p.code] = p;
+      if (!Object.keys(live).length) live = null;
+      if (j.updated) {
+        dataStatus.mode = 'json';
+        if (!dataStatus.updated || Date.parse(j.updated) < Date.parse(dataStatus.updated)) dataStatus.updated = j.updated;
+      }
+    }
+  } catch (e) { ok = false; }
+
+  const sig = JSON.stringify(live);
+  if (sig !== resultsSig) {
+    resultsSig = sig;
+    table.innerHTML = resultsTableHTML(live);
+  }
+  return ok;
+}
+
+/* ---------- freshness ---------- */
+
+function timeAgo(ms){
+  const s = Math.round(ms / 1000);
+  if (s < 90) return s + ' seconds ago';
+  const m = Math.round(s / 60);
+  return m < 90 ? m + ' minutes ago' : Math.round(m / 60) + ' hours ago';
+}
+
+/* Without this a dead pipeline looks identical to a quiet one. */
+function renderDataStatus(){
+  const nodes = document.querySelectorAll('.dataStatus');
+  if (!nodes.length) return;
+  const stale = CONFIG.automation.staleAfterMs || 300000;
+  let dot = '#22a35a', text;
+
+  if (pollFailures > 0) { dot = '#c0392b'; text = 'Connection problem — retrying'; }
+  else if (dataStatus.mode === 'sheet') { dot = '#e0a800'; text = 'Reading the spreadsheet directly — the automatic feed is not running'; }
+  else if (dataStatus.mode === 'json' && dataStatus.updated) {
+    const age = Date.now() - Date.parse(dataStatus.updated);
+    if (age > stale) { dot = '#e0a800'; text = 'Last updated ' + timeAgo(age) + ' — the feed may be delayed'; }
+    else text = 'Updated ' + timeAgo(age);
+  } else { dot = '#9aa0a6'; text = 'Waiting for the first figures'; }
+
+  nodes.forEach(n => { n.innerHTML = `<span class="pulse" style="background:${dot}"></span>${esc(text)}`; });
+}
+
+/* ---------- poll loop ---------- */
+
+function pollDelay(){
+  const base = CONFIG.automation.pollIntervalMs || 25000;
+  return base * Math.pow(2, Math.min(pollFailures, 4)) + Math.random() * 5000;
+}
+function schedulePoll(){ setTimeout(runPoll, pollDelay()); }
+
+async function runPoll(){
+  if (document.hidden) { schedulePoll(); return; }
+  pollCycle++;
+  dataStatus.mode = 'none';
+  dataStatus.updated = null;
+  try {
+    const outcomes = await Promise.all([
+      renderExit('votes'), renderExit('seats'), renderResults(), refreshDemographic(),
+    ]);
+    pollFailures = outcomes.every(Boolean) ? 0 : pollFailures + 1;
+  } catch (e) {
+    pollFailures++;
+  }
+  renderDataStatus();
+  schedulePoll();
+}
+
+/* ---------- page assembly ---------- */
+
+function quickFacts(){
+  const e = CONFIG.election;
+  const facts = (e.quickFacts || []).filter(f => has(f.value) || has(f.label));
+  if (!facts.length) return '';
+  return `<div class="callout title"><span class="label">Quick facts</span></div>
+    <div class="hero-meta">${facts.map(f => `<div><strong>${esc(txt(f.value))}</strong>${esc(txt(f.label))}</div>`).join('')}</div>`;
+}
+
+function footerHTML(){
+  const p = CONFIG.page;
+  const links = [];
+  if (has(p.homeUrl)) links.push(`<a href="${esc(txt(p.homeUrl))}" target="_blank" rel="noopener">${esc(txt(p.brandName) || 'Home')}</a>`);
+  if (has(p.contactEmail)) links.push(`<a href="mailto:${esc(txt(p.contactEmail))}">${esc(txt(p.contactEmail))}</a>`);
+  return `<footer>
+    ${links.length ? `<div class="foot-links">${links.join('')}</div>` : ''}
+    ${has(p.citation) ? `<p style="margin:0 0 8px;"><strong>Preferred citation: </strong>${esc(txt(p.citation))}</p>` : ''}
+    ${has(p.sources) ? `<p style="margin:0 0 8px;"><strong>Sources:</strong> ${esc(txt(p.sources))}</p>` : ''}
+    ${has(p.contactEmail) ? `<p style="margin:0;">Found a mistake? Would you like to add some data? <a href="mailto:${esc(txt(p.contactEmail))}">Contact us</a>.</p>` : ''}
+  </footer>`;
+}
+
+
+const CONTENT_FILES = {
+  context: 'content/context.json',
+  candidates: 'content/candidates.json',
+  previousResult: 'content/previous-result.json',
+  polling: 'content/polls.json',
+  pollingHistory: 'content/poll-history.json',
+  headToHead: 'content/head-to-head.json',
+  records: 'content/records.json',
+  demographics: 'content/demographic-seed.json',
+};
+
+function fatal(message, detail){
+  document.getElementById('page').innerHTML = `<div class="fatal">
+    <strong>This page could not be built.</strong><br>${esc(message)}
+    ${detail ? `<br><br><code>${esc(detail)}</code>` : ''}
+  </div>`;
+}
+
+async function boot(){
+  try {
+    CONFIG = await getJSON('config.json', {required: true});
+  } catch (e) {
+    return fatal('config.json could not be read.', e.message);
+  }
+  try {
+    PARTIES = await getJSON('data/parties.json', {required: true});
+  } catch (e) {
+    return fatal('data/parties.json is missing. Run `node scripts/fetch-parties.js` and commit the result.', e.message);
+  }
+
+  document.title = txt(CONFIG.page.title) || txt(CONFIG.election.title) || 'Election';
+  document.documentElement.lang = CONFIG.page.lang || 'en';
+
+  const names = Object.keys(CONFIG.sections || {}).filter(enabled);
+  await Promise.all(names.map(async name => {
+    const file = CONTENT_FILES[name];
+    if (!file) return;
+    CONTENT[name] = await getJSON(file);
+  }));
+
+
+  const after = [];
+  const queue = fn => after.push(fn);
+
+  let html = quickFacts();
+  for (const name of names) {
+    const render = RENDER[name];
+    if (!render) { console.warn(`config.sections."${name}" has no renderer — ignored`); continue; }
+    try {
+      html += render(section(name), queue, CONTENT[name]);
+    } catch (e) {
+      console.error(`section "${name}" failed to render:`, e);
+    }
+  }
+  html += footerHTML();
+
+  document.getElementById('page').innerHTML = html;
+  for (const fn of after) {
+    try { fn(); } catch (e) { console.error('deferred render failed:', e); }
+  }
+
+  if (TODOS.size) {
+    console.warn(`${TODOS.size} config/content value(s) still start with TODO and were rendered as blank:`, [...TODOS]);
+  }
+
+  runPoll();
+  document.addEventListener('visibilitychange', () => { if (!document.hidden && pollFailures === 0) runPoll(); });
+  reportHeight();
+}
+
+/* ---------- embedding ---------- */
+
+/* Datawrapper posts a new height as a chart grows; without this the iframe
+   keeps its initial height and clips. Any origin can post here, so the sender
+   must be one of this page's own iframes and the height a plausible number. */
+window.addEventListener('message', e => {
+  if (!e.data || e.data['datawrapper-height'] === undefined) return;
+  const frames = document.querySelectorAll('iframe');
+  for (const key in e.data['datawrapper-height']) {
+    const h = Number(e.data['datawrapper-height'][key]);
+    if (!Number.isFinite(h) || h <= 0 || h > 20000) continue;
+    for (const frame of frames) {
+      if (frame.contentWindow === e.source) frame.style.height = h + 'px';
+    }
+  }
+});
+
+/* Tells a parent frame how tall the content is, so the embedding post needs no
+   hardcoded guess. The parent snippet must listen for the same
+   config.page.frameMessageKey. */
+let lastSentHeight = 0;
+function reportHeight(){
+  if (!CONFIG) return;
+  /* Not documentElement.scrollHeight: that returns the larger of content and
+     viewport, so the frame could never shrink again. */
+  const h = Math.ceil(document.body.getBoundingClientRect().height);
+  if (!h || Math.abs(h - lastSentHeight) < 2) return;
+  lastSentHeight = h;
+  if (window.parent && window.parent !== window) {
+    window.parent.postMessage({[CONFIG.page.frameMessageKey || 'electionFrameHeight']: h}, '*');
+  }
+}
+window.addEventListener('load', () => {
+  reportHeight();
+  /* Charts and sheet fetches land after 'load'. */
+  [500, 1500, 3000].forEach(ms => setTimeout(reportHeight, ms));
+});
+if (window.ResizeObserver) new ResizeObserver(reportHeight).observe(document.body);
+else setInterval(reportHeight, 1000);
+
+boot();
+</script>
+</body>
+</html>

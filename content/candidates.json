@@ -1,0 +1,17 @@
+{
+  "_comment": "Lead candidate cards. `party` is a template code from data/parties.json and supplies the card colour, so nothing here repeats a hex value. `role` is the line under the name; `bio` the short paragraph. Order is the order they appear.",
+  "items": [
+    {
+      "name": "TODO Candidate Name",
+      "party": "TODO CODE",
+      "role": "TODO Incumbent head of government",
+      "bio": "TODO One or two sentences: current office, how they were selected, why they matter to this race."
+    },
+    {
+      "name": "TODO Candidate Name",
+      "party": "TODO CODE",
+      "role": null,
+      "bio": "TODO One or two sentences."
+    }
+  ]
+}
