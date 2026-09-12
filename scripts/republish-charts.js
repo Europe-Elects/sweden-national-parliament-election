@@ -19,6 +19,27 @@ async function main() {
     console.log('republishOnUpdate is false — skipping');
     return;
   }
+
+  /* A page whose election is over keeps running: the workflow still has its
+     schedule, and nothing in it knows the night has been and gone. One such
+     page republished seven charts every run for a week after polling day and
+     reached version 248, which is roughly 1,700 API calls spent on figures that
+     had stopped changing. The quota is shared across the organisation, so that
+     is taken from whichever election is next.
+
+     Republishing stops on its own once the result is final. */
+  const iso = config.election && config.election.date && config.election.date.iso;
+  const graceDays = (config.automation && config.automation.republishUntilDays) ?? 7;
+  if (/^\d{4}-\d{2}-\d{2}$/.test(String(iso))) {
+    const daysSince = (Date.now() - Date.parse(iso + 'T00:00:00Z')) / 86400000;
+    if (daysSince > graceDays) {
+      console.log(
+        `the election was ${Math.floor(daysSince)} days ago, past the ${graceDays}-day window — skipping. ` +
+        `Set automation.republishUntilDays higher if the charts genuinely still change.`
+      );
+      return;
+    }
+  }
   if (!token) {
     console.log('::warning::DATAWRAPPER_TOKEN not set — skipping chart republish');
     return;

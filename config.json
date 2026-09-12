@@ -298,6 +298,7 @@
     },
     "pollIntervalMs": 25000,
     "sheetFallbackEvery": 4,
-    "staleAfterMs": 300000
+    "staleAfterMs": 300000,
+    "republishUntilDays": 7
   }
 }
