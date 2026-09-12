@@ -130,6 +130,53 @@ function testDispatch() {
   dispatch();
 }
 
+/* ---------- heartbeat ----------
+
+   GitHub's cron is best-effort and drops runs, badly and without warning: on
+   the Sweden repo a ten-minute schedule fired three times in four hours. As a
+   backstop that is close to useless, and the backstop is what covers a missed
+   edit trigger.
+
+   Google's time-based triggers do not drop, so the heartbeat lives here
+   instead. It dispatches unconditionally on a fixed interval; a run with
+   nothing to do ends in "no data changes" and costs nothing.
+
+   Install it once by running installHeartbeat() from the editor. Pass an
+   interval if you want something other than five minutes — Apps Script accepts
+   1, 5, 10, 15 or 30. One minute is worth it for election night; put it back to
+   ten afterwards, or run removeHeartbeat(). */
+function heartbeat() {
+  props().setProperty('lastDispatch', String(Date.now()));
+  dispatch();
+}
+
+function installHeartbeat(minutes) {
+  const every = minutes || 5;
+  if ([1, 5, 10, 15, 30].indexOf(every) === -1) {
+    throw new Error('interval must be 1, 5, 10, 15 or 30 minutes, got ' + every);
+  }
+  removeHeartbeat();
+  ScriptApp.newTrigger('heartbeat').timeBased().everyMinutes(every).create();
+  console.log('heartbeat installed, every ' + every + ' minute(s)');
+}
+
+function removeHeartbeat() {
+  const gone = ScriptApp.getProjectTriggers()
+    .filter(function (t) { return t.getHandlerFunction() === 'heartbeat'; });
+  gone.forEach(function (t) { ScriptApp.deleteTrigger(t); });
+  console.log('removed ' + gone.length + ' heartbeat trigger(s)');
+}
+
+/* What is actually installed, since a trigger added from the UI and one added
+   from here look the same afterwards and neither is visible from the Sheet. */
+function listTriggers() {
+  const all = ScriptApp.getProjectTriggers();
+  console.log(all.length + ' trigger(s):');
+  all.forEach(function (t) {
+    console.log('  ' + t.getHandlerFunction() + '  ' + t.getEventType() + '  ' + t.getTriggerSource());
+  });
+}
+
 /* Run this when testDispatch fails. A dispatch can only really fail four ways
    and they all surface as HTTP 404, because GitHub answers 404 rather than 403
    for anything a token cannot see:
