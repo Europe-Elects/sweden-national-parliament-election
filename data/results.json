@@ -1,87 +1,87 @@
 {
-  "updated": "2026-09-12T16:54:51.529Z",
-  "validVotes": 8,
-  "counting": true,
+  "updated": "2026-09-12T17:08:44.193Z",
+  "validVotes": 0,
+  "counting": false,
   "parties": [
     {
       "code": "S",
       "label": "S (S&D)",
-      "votes": 1,
-      "share": 17.23,
-      "seats": 1,
-      "changeV": -29.3,
-      "changeS": -106,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "SD",
       "label": "SD (ECR)",
-      "votes": 1,
-      "share": 12.5,
-      "seats": 1,
-      "changeV": -19.5,
-      "changeS": -72,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "M",
       "label": "M (EPP)",
-      "votes": 1,
-      "share": 8.56,
-      "seats": 1,
-      "changeV": -18.1,
-      "changeS": -67,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "V",
       "label": "V (LEFT)",
-      "votes": 1,
-      "share": 9.3,
-      "seats": 1,
-      "changeV": -5.8,
-      "changeS": -23,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "C",
       "label": "C (RE)",
-      "votes": 1,
-      "share": 2.58,
-      "seats": 1,
-      "changeV": -5.7,
-      "changeS": -23,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "KD",
       "label": "KD (EPP)",
-      "votes": 1,
-      "share": 8.93,
-      "seats": 1,
-      "changeV": -4.3,
-      "changeS": -18,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "MP",
       "label": "MP (Greens/EFA)",
-      "votes": 1,
-      "share": 1.17,
-      "seats": 1,
-      "changeV": -4.1,
-      "changeS": -17,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     },
     {
       "code": "L",
       "label": "L (RE)",
-      "votes": 1,
-      "share": 0.14,
-      "seats": 1,
-      "changeV": -3.6,
-      "changeS": -15,
-      "reported": true
+      "votes": null,
+      "share": null,
+      "seats": null,
+      "changeV": null,
+      "changeS": null,
+      "reported": false
     }
   ]
 }
