@@ -147,7 +147,7 @@
         {
           "label": "SVT/VALU",
           "id": "VMDOO",
-          "version": 1,
+          "version": 2,
           "height": 238,
           "ariaLabel": "Stacked Bars",
           "live": true
