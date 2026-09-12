@@ -212,11 +212,12 @@
       "chart": {
         "label": "2022 demographic vote",
         "id": "MLC5G",
-        "version": 3,
+        "version": 4,
         "height": 521,
         "ariaLabel": "Small multiple column chart",
         "live": false
-      }
+      },
+      "_note": "Unlinked from its source spreadsheet on 12 September 2026 and given the same data as an upload, so readers no longer fetch Google for it. The data is the 2022 exit poll and does not change. To restore the link: Upload data -> Link external dataset -> https://docs.google.com/spreadsheets/d/1spbkeWm52y_fWQr-j_IYl7wYxjjHBeHVHEAEHzmmY9c/export?format=csv&gid=571805518"
     },
     "demographics": {
       "label": "Demographic Vote · Over Time",
