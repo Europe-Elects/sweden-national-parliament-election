@@ -1029,12 +1029,21 @@ async function boot(){
     console.warn(`${TODOS.size} config/content value(s) still start with TODO and were rendered as blank:`, [...TODOS]);
   }
 
+  watchEmbeds();
   runPoll();
   document.addEventListener('visibilitychange', () => { if (!document.hidden && pollFailures === 0) runPoll(); });
   reportHeight();
 }
 
 /* ---------- embedding ---------- */
+
+/* A chart that has drawn itself reports its height. One that has not stays
+   silent, which is the only signal available from outside a cross-origin
+   frame — and the signal this page needs, because Datawrapper's own library
+   gives up on fetching its dataset after five seconds and then renders
+   nothing at all. A reader is left looking at a white rectangle with no
+   indication anything is wrong. */
+const RENDERED = new WeakSet();
 
 /* Datawrapper posts a new height as a chart grows; without this the iframe
    keeps its initial height and clips. Any origin can post here, so the sender
@@ -1046,10 +1055,48 @@ window.addEventListener('message', e => {
     const h = Number(e.data['datawrapper-height'][key]);
     if (!Number.isFinite(h) || h <= 0 || h > 20000) continue;
     for (const frame of frames) {
-      if (frame.contentWindow === e.source) frame.style.height = h + 'px';
+      if (frame.contentWindow === e.source) {
+        frame.style.height = h + 'px';
+        RENDERED.add(frame);
+      }
     }
   }
 });
+
+/* Reloading is worth doing because the failure is a timeout, not a fault: the
+   dataset is usually reachable and simply did not arrive inside Datawrapper's
+   window. A second attempt generally succeeds, and at poll close — when every
+   reader is pulling the same sheets at once — it is the difference between a
+   blank card and a chart. */
+function watchEmbed(frame, attempt){
+  const waitMs = 9000;
+  const maxAttempts = 3;
+  setTimeout(() => {
+    if (RENDERED.has(frame) || !frame.isConnected) return;
+
+    if (attempt < maxAttempts) {
+      const src = frame.src;
+      frame.src = 'about:blank';
+      /* A tick, so the browser treats it as a fresh navigation rather than
+         collapsing the two assignments. */
+      setTimeout(() => { frame.src = src; watchEmbed(frame, attempt + 1); }, 50);
+      return;
+    }
+
+    const url = frame.getAttribute('src');
+    const box = frame.closest('.iframe-embed') || frame.parentElement;
+    if (!box) return;
+    box.innerHTML = `<div class="placeholder">
+      This chart did not load — its data source timed out.
+      <br><a href="${esc(url)}" target="_blank" rel="noopener">Open it directly</a>
+    </div>`;
+    console.warn(`embed gave up after ${maxAttempts} attempts: ${url}`);
+  }, waitMs);
+}
+
+function watchEmbeds(){
+  document.querySelectorAll('.iframe-embed iframe').forEach(f => watchEmbed(f, 1));
+}
 
 /* Tells a parent frame how tall the content is, so the embedding post needs no
    hardcoded guess. The parent snippet must listen for the same
