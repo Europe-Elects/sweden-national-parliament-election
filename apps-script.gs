@@ -129,3 +129,55 @@ function dispatch() {
 function testDispatch() {
   dispatch();
 }
+
+/* Run this when testDispatch fails. A dispatch can only really fail four ways
+   and they all surface as HTTP 404, because GitHub answers 404 rather than 403
+   for anything a token cannot see:
+
+     - GITHUB_REPO names a repository that does not exist (a typo, or the wrong
+       name entirely)
+     - the PAT was issued for a different repository
+     - the PAT was issued against a personal account rather than the
+       organisation
+     - the organisation has not approved the PAT yet, so it exists but grants
+       nothing
+
+   This tells them apart. It never prints the token, only its length and prefix,
+   so the output is safe to paste into a chat. */
+function diagnose() {
+  const p = props();
+  const repo = (p.getProperty('GITHUB_REPO') || '').trim();
+  const token = p.getProperty('GITHUB_PAT') || '';
+
+  console.log('GITHUB_REPO  = "' + repo + '"');
+  console.log('IGNORED_TABS = "' + (p.getProperty('IGNORED_TABS') || '') + '"');
+  console.log('GITHUB_PAT   = ' + (token
+    ? token.slice(0, 11) + '… (' + token.length + ' chars)'
+    : 'NOT SET'));
+  console.log('bound to spreadsheet: "' + SpreadsheetApp.getActiveSpreadsheet().getName() + '"');
+  console.log('  id ' + SpreadsheetApp.getActiveSpreadsheet().getId());
+
+  if (!repo || !token) { console.log('fill both properties in first'); return; }
+
+  const headers = { Authorization: 'Bearer ' + token, Accept: 'application/vnd.github+json' };
+  const get = function (url) {
+    return UrlFetchApp.fetch(url, { headers: headers, muteHttpExceptions: true });
+  };
+
+  const who = get('https://api.github.com/user');
+  console.log('GET /user -> ' + who.getResponseCode() + ' ' +
+    (who.getResponseCode() === 200 ? JSON.parse(who.getContentText()).login : who.getContentText().slice(0, 160)));
+
+  const r = get('https://api.github.com/repos/' + repo);
+  console.log('GET /repos/' + repo + ' -> ' + r.getResponseCode());
+  if (r.getResponseCode() === 200) {
+    const body = JSON.parse(r.getContentText());
+    console.log('  push permission: ' + (body.permissions && body.permissions.push));
+    if (!(body.permissions && body.permissions.push)) {
+      console.log('  the token can read this repository but not write to it — it needs Contents: Read and write');
+    }
+  } else {
+    console.log('  ' + r.getContentText().slice(0, 200));
+    console.log('  404 here means the token cannot see this repository. Check the name above character by character, then check that the PAT lists this repository and was issued with Europe-Elects as the resource owner, and that the organisation has approved it.');
+  }
+}
