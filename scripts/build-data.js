@@ -116,34 +116,50 @@ function buildExit(rows, { max, integer, seatsTotal }) {
    page as though they were results. Treated as "not reported yet" instead. */
 const isPercentFormatted = v => /%/.test(String(v == null ? '' : v));
 
-function buildResults(rows, { index, columns, totalRowPattern, seatsTotal }) {
+function buildResults(rows, { index, columns, totalRowPattern, seatsTotal, votesAre = 'count', minValidVotes = null }) {
   const body = rows.slice(1).filter(r => r[0]);
   const totalRe = new RegExp(totalRowPattern, 'i');
   const totalRow = body.find(r => totalRe.test(r[0]));
+  const asShare = votesAre === 'share';
 
   const placeholders = [];
   let validVotes = 0;
   if (totalRow) {
-    if (isPercentFormatted(totalRow[columns.votes])) {
-      placeholders.push(`the totals row holds ${JSON.stringify(totalRow[columns.votes])}`);
-    } else {
-      validVotes = parseNum(totalRow[columns.votes]) || 0;
+    const rawTotal = totalRow[columns.votes];
+    /* A percent-formatted total is not an electorate figure, and in `share`
+       mode a total is not expected at all. */
+    if (!asShare && isPercentFormatted(rawTotal)) {
+      placeholders.push(`the totals row holds ${JSON.stringify(rawTotal)}`);
+    } else if (!asShare) {
+      validVotes = parseNum(rawTotal) || 0;
     }
   }
+
+  /* An election-specific floor on the totals row. The Sweden 2026 sheet summed
+     to 8, which is a placeholder however it is formatted, and no formatting
+     rule would have caught it. Set it to something no real count could fall
+     below and a half-filled tab can never read as a result. */
+  const belowFloor = !asShare && minValidVotes != null && validVotes > 0 && validVotes < minValidVotes;
 
   const parties = body.filter(r => r !== totalRow).map(r => {
     const label = r[0];
     const code = index.lookup(label);
     const rawVotes = r[columns.votes];
-    const votes = parseNum(rawVotes);
-    const share = parseNum(r[columns.share]);
+    const value = parseNum(rawVotes);
     const seats = columns.seats == null ? null : parseNum(r[columns.seats]);
 
-    let reported = votes != null && votes > 0;
-    if (reported && isPercentFormatted(rawVotes)) {
+    /* In `share` mode the votes column holds percentages on purpose — some
+       returning officers publish no raw counts — so it is the share, and there
+       is no vote count to report. */
+    let votes = asShare ? null : value;
+    let share = asShare ? value : parseNum(r[columns.share]);
+
+    let reported = value != null && value > 0;
+    if (reported && !asShare && isPercentFormatted(rawVotes)) {
       placeholders.push(`${label} holds ${JSON.stringify(rawVotes)}`);
       reported = false;
     }
+    if (reported && belowFloor) reported = false;
 
     if (share != null && (share < 0 || share > 100)) throw new Error(`share ${share} out of range for "${label}"`);
     if (seats != null && seatsTotal && (seats < 0 || seats > seatsTotal * 1.5)) {
@@ -170,6 +186,13 @@ function buildResults(rows, { index, columns, totalRowPattern, seatsTotal }) {
   const unmatched = parties.filter(p => !p.code).map(p => p.label);
   if (unmatched.length) {
     console.warn(`  note: no party matches ${unmatched.map(l => `"${l}"`).join(', ')} — they will show as Others. Add an alias in config.json under parties.overrides if that is wrong.`);
+  }
+
+  if (belowFloor) {
+    console.warn(
+      `  WARNING: the totals row sums to ${validVotes}, below sheet.results.minValidVotes (${minValidVotes}). ` +
+      `Treating the tab as not yet counting, so placeholder figures stay off the page.`
+    );
   }
 
   if (placeholders.length) {
@@ -265,6 +288,8 @@ function targetsFor(config, index) {
   const resultsCfg = (config.sheet && config.sheet.results) || {};
   const columns = resultsCfg.columns || { votes: 1, share: 2, seats: 3, changeVotes: 4, changeSeats: 5 };
   const totalRowPattern = resultsCfg.totalRowPattern || 'valid votes';
+  const votesAre = resultsCfg.votesAre || 'count';
+  const minValidVotes = resultsCfg.minValidVotes == null ? null : Number(resultsCfg.minValidVotes);
   const exitSeatMax = seatsTotal ? seatsTotal * 1.5 : 1000;
 
   const all = [
@@ -278,7 +303,7 @@ function targetsFor(config, index) {
     },
     {
       file: 'results.json', tab: tabs.results, needs: 'results',
-      build: r => buildResults(r, { index, columns, totalRowPattern, seatsTotal }),
+      build: r => buildResults(r, { index, columns, totalRowPattern, seatsTotal, votesAre, minValidVotes }),
     },
     {
       file: 'demographic.json', tab: tabs.demographic, needs: 'demographics',

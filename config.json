@@ -69,7 +69,10 @@
         "changeVotes": 4,
         "changeSeats": 5
       },
-      "totalRowPattern": "valid votes"
+      "totalRowPattern": "valid votes",
+      "votesAre": "count",
+      "minValidVotes": 100000,
+      "_minValidVotesComment": "Sweden 2022 counted about 6.5 million valid votes, so 100000 is far below any real count and far above the placeholder total of 8 the tab shipped with."
     },
     "ignoredTabs": [
       "General availability on election day"

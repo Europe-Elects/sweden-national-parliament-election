@@ -336,6 +336,39 @@ test('a real count in the votes column is still read, percent signs elsewhere ar
   assert.strictEqual(out.parties[0].share, 30.5);
   assert.strictEqual(out.parties[0].changeV, -6.6);
 });
+test('votesAre "share" reads the column as percentages on purpose', () => {
+  /* Some returning officers publish no raw counts, only shares. */
+  const out = buildResults(resultRows('"CDU","30.50%","","12","-6.60%","-3"'), {
+    index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes', votesAre: 'share',
+  });
+  assert.strictEqual(out.counting, true);
+  assert.strictEqual(out.parties[0].share, 30.5);
+  assert.strictEqual(out.parties[0].votes, null);
+});
+test('minValidVotes rejects a totals row no real count could produce', () => {
+  const rows = resultRows(
+    '"CDU","1","17.23","1","-29.30","-106"',
+    '"Valid votes","8","","","",""'
+  );
+  /* Without a floor these read as counted, because nothing about "1" says
+     placeholder once the percent sign is gone. */
+  const loose = buildResults(rows, { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes' });
+  assert.strictEqual(loose.counting, true);
+
+  const guarded = buildResults(rows, {
+    index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes', minValidVotes: 100000,
+  });
+  assert.strictEqual(guarded.counting, false);
+  assert.strictEqual(guarded.parties[0].share, null);
+});
+test('minValidVotes does not suppress a real count', () => {
+  const out = buildResults(resultRows(
+    '"CDU","1284302","30.50","12","-6.60","-3"',
+    '"Valid votes","4210000","","","",""'
+  ), { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes', minValidVotes: 100000 });
+  assert.strictEqual(out.counting, true);
+  assert.strictEqual(out.validVotes, 4210000);
+});
 test('a results tab with no seat column still works', () => {
   const out = buildResults(resultRows('"CDU","1000","30.5","","",""'), {
     index: INDEX, columns: { votes: 1, share: 2, seats: null, changeVotes: null, changeSeats: null }, totalRowPattern: 'valid votes',

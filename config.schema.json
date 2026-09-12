@@ -143,7 +143,9 @@
               },
               "additionalProperties": true
             },
-            "totalRowPattern": { "type": "string", "description": "Case-insensitive regular expression matching the totals row label." }
+            "totalRowPattern": { "type": "string", "description": "Case-insensitive regular expression matching the totals row label." },
+            "votesAre": { "enum": ["count", "share"], "default": "count", "description": "Whether the votes column holds a raw count or a percentage. In \"count\" mode a percent sign marks the cell as a placeholder." },
+            "minValidVotes": { "type": ["number", "null"], "description": "Floor on the totals row; below it the tab reads as not yet counting. null disables the check." }
           },
           "additionalProperties": true
         },

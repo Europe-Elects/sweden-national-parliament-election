@@ -101,6 +101,20 @@ async function checkPost(url) {
     return { body: first.body, cleanHit: false };
   }
 
+  /* LiteSpeed and similar layers answer an unfamiliar client with a small
+     reCAPTCHA interstitial instead of the page. It returns 200, so without
+     checking the body every header below would be read off the challenge rather
+     than the article. Worth knowing for its own sake too: whatever triggers it
+     for a script can trigger it for readers under load. */
+  if (first.body && /Bot Verification|lsrecaptcha|g-recaptcha/i.test(first.body) && first.body.length < 20000) {
+    err(
+      `the post answered with a bot-verification page (${first.body.length} bytes), not the article. ` +
+      'Every reading below is off that challenge, not the post. Ask the host what triggers it and whether ' +
+      'it can fire on ordinary readers during a traffic spike.'
+    );
+    return { body: null, cleanHit: false };
+  }
+
   const cleanHit = second.cache.hit;
 
   if (!cleanHit) {
