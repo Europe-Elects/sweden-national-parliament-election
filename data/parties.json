@@ -1,5 +1,5 @@
 {
-  "updated": "2026-09-12T14:13:15.703Z",
+  "updated": "2026-09-12T16:54:50.990Z",
   "source": {
     "repo": "Europe-Elects/PartiesData",
     "ref": "main",
@@ -117,7 +117,7 @@
       "epGroup": "EPP",
       "epGroupBase": "EPP",
       "euro": "EPP (EPP)",
-      "color": "#1a5f9e",
+      "color": "#1d81a2",
       "dark": false,
       "baseline": 5.3,
       "gov": "Govt.",
@@ -155,7 +155,7 @@
       "epGroup": "RE",
       "epGroupBase": "RE",
       "euro": "ALDE (RE)",
-      "color": "#c9a227",
+      "color": "#FFD700",
       "dark": true,
       "baseline": 4.6,
       "gov": "Govt.",
@@ -174,7 +174,7 @@
       "epGroup": "RE",
       "epGroupBase": "RE",
       "euro": "ALDE (RE)",
-      "color": "#FFD700",
+      "color": "#ffca76",
       "dark": true,
       "baseline": 6.7,
       "gov": null,
