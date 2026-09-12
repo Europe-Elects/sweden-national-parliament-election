@@ -308,6 +308,34 @@ test('a party the config does not know still parses, with no code', () => {
   });
   assert.strictEqual(out.parties[0].code, null);
 });
+test('a percent-formatted votes column is a placeholder, not a count', () => {
+  /* The Sweden 2026 sheet shipped "1.00%" in the votes column for every party,
+     with a totals row of "8.00%". Read as counts those mark every party as
+     having reported, and the page then shows invented shares and a full
+     negative swing as though they were results. */
+  const out = buildResults(resultRows(
+    '"CDU","1.00%","17.23%","1","-29.30%","-106"',
+    '"GRÜNE","1.00%","1.17%","1","-4.10%","-17"',
+    '"Valid votes","8.00%","","","",""'
+  ), { index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes' });
+
+  assert.strictEqual(out.counting, false);
+  assert.strictEqual(out.validVotes, 0);
+  for (const p of out.parties) {
+    assert.strictEqual(p.reported, false);
+    assert.strictEqual(p.share, null);
+    assert.strictEqual(p.changeV, null);
+  }
+});
+test('a real count in the votes column is still read, percent signs elsewhere are fine', () => {
+  const out = buildResults(resultRows('"CDU","1284302","30.50%","12","-6.60%","-3"'), {
+    index: INDEX, columns: RESULT_COLS, totalRowPattern: 'valid votes',
+  });
+  assert.strictEqual(out.counting, true);
+  assert.strictEqual(out.parties[0].votes, 1284302);
+  assert.strictEqual(out.parties[0].share, 30.5);
+  assert.strictEqual(out.parties[0].changeV, -6.6);
+});
 test('a results tab with no seat column still works', () => {
   const out = buildResults(resultRows('"CDU","1000","30.5","","",""'), {
     index: INDEX, columns: { votes: 1, share: 2, seats: null, changeVotes: null, changeSeats: null }, totalRowPattern: 'valid votes',

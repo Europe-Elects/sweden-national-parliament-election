@@ -109,19 +109,41 @@ function buildExit(rows, { max, integer, seatsTotal }) {
   };
 }
 
+/* A vote count is never a percentage. A `%` in the votes column means the cell
+   is formatted as one, which in practice means it holds a placeholder rather
+   than a count — and a placeholder above zero would otherwise mark the party as
+   having reported, putting invented shares and a full negative swing on the
+   page as though they were results. Treated as "not reported yet" instead. */
+const isPercentFormatted = v => /%/.test(String(v == null ? '' : v));
+
 function buildResults(rows, { index, columns, totalRowPattern, seatsTotal }) {
   const body = rows.slice(1).filter(r => r[0]);
   const totalRe = new RegExp(totalRowPattern, 'i');
   const totalRow = body.find(r => totalRe.test(r[0]));
-  const validVotes = totalRow ? (parseNum(totalRow[columns.votes]) || 0) : 0;
+
+  const placeholders = [];
+  let validVotes = 0;
+  if (totalRow) {
+    if (isPercentFormatted(totalRow[columns.votes])) {
+      placeholders.push(`the totals row holds ${JSON.stringify(totalRow[columns.votes])}`);
+    } else {
+      validVotes = parseNum(totalRow[columns.votes]) || 0;
+    }
+  }
 
   const parties = body.filter(r => r !== totalRow).map(r => {
     const label = r[0];
     const code = index.lookup(label);
-    const votes = parseNum(r[columns.votes]);
+    const rawVotes = r[columns.votes];
+    const votes = parseNum(rawVotes);
     const share = parseNum(r[columns.share]);
     const seats = columns.seats == null ? null : parseNum(r[columns.seats]);
-    const reported = votes != null && votes > 0;
+
+    let reported = votes != null && votes > 0;
+    if (reported && isPercentFormatted(rawVotes)) {
+      placeholders.push(`${label} holds ${JSON.stringify(rawVotes)}`);
+      reported = false;
+    }
 
     if (share != null && (share < 0 || share > 100)) throw new Error(`share ${share} out of range for "${label}"`);
     if (seats != null && seatsTotal && (seats < 0 || seats > seatsTotal * 1.5)) {
@@ -148,6 +170,15 @@ function buildResults(rows, { index, columns, totalRowPattern, seatsTotal }) {
   const unmatched = parties.filter(p => !p.code).map(p => p.label);
   if (unmatched.length) {
     console.warn(`  note: no party matches ${unmatched.map(l => `"${l}"`).join(', ')} — they will show as Others. Add an alias in config.json under parties.overrides if that is wrong.`);
+  }
+
+  if (placeholders.length) {
+    console.warn(
+      `  WARNING: the votes column is percent-formatted in ${placeholders.length} row(s), so it holds placeholders, not counts: ` +
+      `${placeholders.slice(0, 3).join('; ')}${placeholders.length > 3 ? '; …' : ''}. ` +
+      `Those rows are reported as not yet counted, which keeps invented shares off the page. ` +
+      `Clear the votes column in the Sheet, or format it as a number, before polls close.`
+    );
   }
 
   return {
