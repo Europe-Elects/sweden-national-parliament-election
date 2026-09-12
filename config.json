@@ -1,6 +1,5 @@
 {
   "$schema": "./config.schema.json",
-
   "page": {
     "title": "National Parliament Election in Sweden · 2026",
     "lang": "en",
@@ -10,10 +9,9 @@
     "brandName": "Europe Elects",
     "homeUrl": "https://europeelects.eu/",
     "contactEmail": "contact@europeelects.eu",
-    "citation": "TODO Author, A. (2026, September D). Sweden: National parliament election 2026. Europe Elects. https://europeelects.eu/...",
+    "citation": null,
     "sources": "SVT/VALU, Novus (TV4), Sifo, Demoskop, Ipsos, Valmyndigheten."
   },
-
   "election": {
     "title": "National parliament election in Sweden",
     "shortTitle": "Sweden 2026",
@@ -23,21 +21,30 @@
       "territoryNative": null
     },
     "chamber": "Riksdag",
-    "date": { "iso": "2026-09-13", "display": "13 September 2026" },
+    "date": {
+      "iso": "2026-09-13",
+      "display": "13 September 2026"
+    },
     "timezone": "CEST",
     "pollsCloseTime": "20:00",
     "firstProjectionTime": "20:00",
     "seatsTotal": 349,
     "thresholdPercent": 4,
     "ballotName": "party-list vote",
-
     "quickFacts": [
-      { "value": "13 September 2026", "label": "Election day" },
-      { "value": "349 seats", "label": "Riksdag" },
-      { "value": "08:00–20:00", "label": "Polls open" },
-      { "value": "TODO 0,000,000", "label": "Eligible voters" }
+      {
+        "value": "13 September 2026",
+        "label": "Election day"
+      },
+      {
+        "value": "349 seats",
+        "label": "Riksdag"
+      },
+      {
+        "value": "08:00–20:00",
+        "label": "Polls open"
+      }
     ],
-
     "previous": {
       "year": 2022,
       "date": "11 September 2022",
@@ -46,7 +53,6 @@
       "note": null
     }
   },
-
   "sheet": {
     "id": "1ApgXml6KBngMsUrt4CAXCmqKYwXdmUTgwREnFhBBnWE",
     "tabs": {
@@ -56,12 +62,19 @@
       "demographic": null
     },
     "results": {
-      "columns": { "votes": 1, "share": 2, "seats": 3, "changeVotes": 4, "changeSeats": 5 },
+      "columns": {
+        "votes": 1,
+        "share": 2,
+        "seats": 3,
+        "changeVotes": 4,
+        "changeSeats": 5
+      },
       "totalRowPattern": "valid votes"
     },
-    "ignoredTabs": ["General availability on election day"]
+    "ignoredTabs": [
+      "General availability on election day"
+    ]
   },
-
   "parties": {
     "source": {
       "repo": "Europe-Elects/PartiesData",
@@ -71,36 +84,46 @@
       "electionType": "national parliament",
       "localPath": null
     },
-
     "requireSource": true,
     "metadataFallback": [],
     "baselineSource": "partiesdata",
-
-    "order": ["S", "SD", "M", "V", "C", "KD", "MP", "L"],
-
+    "order": [
+      "S",
+      "SD",
+      "M",
+      "V",
+      "C",
+      "KD",
+      "MP",
+      "L"
+    ],
     "overrides": {
-      "_note": "M and KD are both EPP, C and L are both RE, so the europarty palette gives each pair one colour. The smaller of each pair is shifted to a darker shade of the same family so they stay apart in a chart. Replace these with whatever the Datawrapper charts actually use.",
-      "KD": { "color": "#1a5f9e" },
-      "L":  { "color": "#c9a227" }
+      "_note": "Taken from the Datawrapper charts so the page and the charts agree. Only these two differ from the europarty palette: C and L are both RE and M and KD are both EPP, so each pair would otherwise share one colour. S #ff0000, SD #0000ff, M #3399ff, V #990000, MP #009900 and L #ffd700 are the palette defaults and need no entry.",
+      "C": {
+        "color": "#ffca76"
+      },
+      "KD": {
+        "color": "#1d81a2"
+      }
     },
-
     "extra": {}
   },
-
   "sections": {
-    "context": { "label": "Context", "open": false },
-
-    "candidates": { "label": "Lead Candidates", "open": false },
-
+    "context": {
+      "label": "Context",
+      "open": false
+    },
+    "candidates": {
+      "label": "Lead Candidates",
+      "open": false
+    },
     "results": {
       "label": "Results",
       "heading": "All contesting parties",
       "sub": "Every party in the Riksdag, with its European party affiliation. Official results and the change vs. 2022 populate after polls close.",
       "decimals": 2
     },
-
     "_projectionsNote": "No projection charts supplied yet. Add a \"projections\" section with a `charts` array once the Datawrapper IDs exist.",
-
     "exitVotes": {
       "label": "Exit Poll · Popular Vote",
       "heading": "Sweden 2026 · Exit poll, popular vote",
@@ -108,7 +131,6 @@
       "empty": "Exit poll figures will appear here once published at 20:00 CEST on 13 September 2026.",
       "axisStep": 10
     },
-
     "exitSeats": {
       "label": "Exit Poll · Seats",
       "heading": "Sweden 2026 · Exit poll, seat estimate",
@@ -116,59 +138,118 @@
       "empty": "Exit poll seat estimates will appear here once published at 20:00 CEST on 13 September 2026.",
       "axisStep": 25
     },
-
     "coalitions": {
       "label": "Coalition Options · Exit Polls",
       "heading": "Possible coalition combinations",
       "sub": "Combined seat total of viable coalition options, per the latest exit poll",
       "note": "Coalition arithmetic appears once the first exit poll is published at 20:00 CEST on 13 September 2026.",
       "charts": [
-        { "label": "SVT/VALU", "id": "VMDOO", "version": 1, "height": 238, "ariaLabel": "Stacked Bars", "live": true }
+        {
+          "label": "SVT/VALU",
+          "id": "VMDOO",
+          "version": 1,
+          "height": 238,
+          "ariaLabel": "Stacked Bars",
+          "live": true
+        },
+        {
+          "label": "Novus (TV4)",
+          "id": "fnm6Q",
+          "version": 1,
+          "height": 239,
+          "ariaLabel": "Stacked Bars",
+          "live": true
+        }
       ]
     },
-
+    "demographicSwing": {
+      "label": "Demographic Swing",
+      "heading": "Swing by demographic group",
+      "sub": "Change in vote share since 2022, by group, per the exit poll",
+      "note": null,
+      "chart": {
+        "label": "Demographic swing",
+        "id": "onN18",
+        "version": 4,
+        "height": 627,
+        "ariaLabel": "Arrow Plot",
+        "live": true
+      }
+    },
+    "demographicVote": {
+      "label": "Demographic Vote · 2022",
+      "heading": "Vote share by group at the 2022 election",
+      "sub": "SVT/VALU exit poll, 2022",
+      "note": null,
+      "chart": {
+        "label": "2022 demographic vote",
+        "id": "MLC5G",
+        "version": 3,
+        "height": 521,
+        "ariaLabel": "Small multiple column chart",
+        "live": false
+      }
+    },
     "turnout": {
       "label": "Turnout by the Hour",
       "heading": "Sweden 2026 · Turnout by the hour",
       "sub": "Cumulative turnout reported through election day, local time",
       "note": null,
-      "chart": { "label": "Turnout", "id": "xr5Oj", "version": 1, "height": 369, "ariaLabel": "Line chart", "live": true }
+      "chart": {
+        "label": "Turnout",
+        "id": "xr5Oj",
+        "version": 1,
+        "height": 369,
+        "ariaLabel": "Line chart",
+        "live": true
+      }
     },
-
     "previousResult": {
       "label": "2022 Result · Outgoing Riksdag",
       "heading": "Sweden 2022 · Final result",
       "sub": "11 September 2022 · turnout 84.2% · 349 seats",
       "open": false
     },
-
+    "history": {
+      "label": "Electoral History",
+      "heading": "Sweden · National parliament elections, vote share by election",
+      "sub": "Certified results, earliest election to date",
+      "note": null,
+      "chart": {
+        "label": "Electoral history",
+        "id": "xsLw8",
+        "version": 3,
+        "height": 405,
+        "ariaLabel": "Area Chart",
+        "live": false
+      }
+    },
     "pollingAverage": {
       "label": "Polling Average",
       "heading": "Sweden · Europe Elects polling average",
       "sub": "A standing chart maintained across the parliamentary term, not rebuilt for this page",
       "note": null,
-      "chart": { "label": "Polling average of Sweden", "id": "ZImAy", "version": 62, "height": 415, "ariaLabel": "Line chart", "live": false },
+      "chart": {
+        "label": "Polling average of Sweden",
+        "id": "ZImAy",
+        "version": 62,
+        "height": 415,
+        "ariaLabel": "Line chart",
+        "live": false
+      },
       "_note": "live: false on purpose, and the version is pinned. This chart is kept up to date independently of this page, so the pipeline must not republish it. National elections have a standing polling average; regional ones generally do not, which is why the template ships without this section."
     },
-
     "polling": {
       "label": "Pre-Election Polling",
       "heading": "Sweden 2026 · Voting intention since the 2022 election",
       "sub": "Individual polls published 2022–2026",
       "yMax": null
     },
-
     "pollingHistory": null,
-
     "headToHead": null,
-
     "demographics": null,
-
-    "_historyNote": "No electoral-history charts supplied yet. Add a \"history\" section with a `charts` array once the Datawrapper IDs exist.",
-
     "records": {}
   },
-
   "automation": {
     "githubRepo": "Europe-Elects/sweden-national-parliament-election",
     "datawrapper": {
