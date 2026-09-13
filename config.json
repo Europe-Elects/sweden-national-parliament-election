@@ -43,8 +43,12 @@
       {
         "value": "08:00–20:00",
         "label": "Polls open"
+      },
+      {
+        "value": "7,996,396",
+        "label": "Eligible voters"
       }
-    ],
+    ]    ],
     "previous": {
       "year": 2022,
       "date": "11 September 2022",
