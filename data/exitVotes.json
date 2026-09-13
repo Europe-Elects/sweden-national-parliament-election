@@ -1,8 +1,8 @@
 {
-  "updated": "2026-09-13T18:05:23.149Z",
+  "updated": "2026-09-13T18:14:28.227Z",
   "published": true,
   "header": [
-    "STV/VALU exit poll (self-commissioned)",
+    "",
     "S",
     "SD",
     "M",
@@ -13,6 +13,17 @@
     "L"
   ],
   "rows": [
+    [
+      "STV/VALU exit poll (self-commissioned)",
+      "28.4",
+      "17.2",
+      "18.1",
+      "8",
+      "7.5",
+      "",
+      "",
+      ""
+    ],
     [
       "Novus exit poll for TV4",
       "28.4",
