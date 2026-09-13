@@ -88,6 +88,12 @@
   canvas{max-width:100%;}
   .iframe-embed{width:100%;overflow:hidden;}
   .iframe-embed iframe{width:100%;border:none;display:block;}
+  /* The empty state covers the chart rather than hiding it. A display:none
+     iframe is never rendered by the browser, so the chart inside it would stop
+     reporting its height and could never tell the page it had data — which is
+     the one thing this state exists to wait for. */
+  .iframe-embed.is-empty{position:relative;}
+  .iframe-embed.is-empty > .placeholder{position:absolute;inset:0;background:var(--card);display:flex;align-items:center;justify-content:center;margin:0;}
   .embed-row{display:grid;grid-template-columns:1fr 1fr;gap:16px;}
   .embed-row .card{margin-top:0;}
   .chart-box{height:460px;}
@@ -246,19 +252,22 @@ function cardHead(cfg){
 function note(cfg){
   return has(cfg.note) ? `<p class="threshold-note">${txt(cfg.note)}</p>` : '';
 }
-function embed(chart){
+/* emptyMsg is the section's `empty` copy, carried on the wrapper so the embed
+   watcher can show it in place of a chart whose dataset has no values yet. */
+function embed(chart, emptyMsg){
   if (!chart || !chart.id || /^TODO/i.test(chart.id)) return '';
   const src = `https://datawrapper.dwcdn.net/${encodeURIComponent(chart.id)}/${chart.version || 1}/`;
-  return `<div class="iframe-embed"><iframe title="${esc(txt(chart.label))}" aria-label="${esc(chart.ariaLabel || 'Chart')}" id="datawrapper-chart-${esc(chart.id)}" src="${esc(src)}" scrolling="no" frameborder="0" height="${Number(chart.height) || 400}" data-external="1"></iframe></div>`;
+  const empty = has(emptyMsg) ? ` data-empty-msg="${esc(txt(emptyMsg))}"` : '';
+  return `<div class="iframe-embed"${empty}><iframe title="${esc(txt(chart.label))}" aria-label="${esc(chart.ariaLabel || 'Chart')}" id="datawrapper-chart-${esc(chart.id)}" src="${esc(src)}" scrolling="no" frameborder="0" height="${Number(chart.height) || 400}" data-external="1"></iframe></div>`;
 }
-function embedGrid(chartList){
+function embedGrid(chartList, emptyMsg){
   const items = (chartList || []).filter(c => c && c.id && !/^TODO/i.test(c.id));
   if (!items.length) return '';
-  if (items.length === 1) return embed(items[0]);
+  if (items.length === 1) return embed(items[0], emptyMsg);
   return `<div class="embed-row">${items.map(c => `
     <div class="card">
       ${has(c.label) ? `<div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(txt(c.label))}</div>` : ''}
-      ${embed(c)}
+      ${embed(c, emptyMsg)}
     </div>`).join('')}</div>`;
 }
 
@@ -373,7 +382,7 @@ RENDER.results = cfg => band(cfg.label) + `<div class="card">
    a polling average, a seat projection, a swing chart — can be added in
    config.json alone, under any key, with no change here. */
 function renderEmbedSection(cfg){
-  const body = Array.isArray(cfg.charts) ? embedGrid(cfg.charts) : embed(cfg.chart);
+  const body = Array.isArray(cfg.charts) ? embedGrid(cfg.charts, cfg.empty) : embed(cfg.chart, cfg.empty);
   if (!body) return '';
   return band(cfg.label) + `<div class="card">${cardHead(cfg)}${body}${note(cfg)}</div>`;
 }
@@ -455,7 +464,7 @@ RENDER.history = cfg => {
   if (!items.length) return '';
   const inner = items.map(c => `<div class="card" style="margin-top:0;">
       ${has(c.label) ? `<div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(txt(c.label))}</div>` : ''}
-      ${embed(c)}
+      ${embed(c, cfg.empty)}
     </div>`).join('');
   return band(cfg.label) + `<div class="card">${cardHead(cfg)}${inner}${note(cfg)}</div>`;
 };
@@ -1058,6 +1067,56 @@ async function boot(){
    height in config.json is the first thing to change. */
 const RENDERED = new WeakSet();
 
+/* A chart whose dataset has rows but no values in them still draws: Datawrapper
+   renders the footer and nothing above it, and reports a height of about thirty
+   pixels. That is the state of the coalition charts before the exit poll lands,
+   and left alone it has two bad ends. The card collapses to a sliver that reads
+   as a broken embed. And because nothing else on this page ever re-points an
+   iframe, a reader who had the page open when the data arrived would keep that
+   sliver until they reloaded the browser — the sheet poll below only feeds the
+   charts this page draws itself, not the embedded ones.
+
+   So a sliver is treated as "rendered, but nothing to show": the section's
+   `empty` copy goes in its place, and the frame is re-pointed on a slow loop
+   until the dataset has something in it, at which point the chart takes over on
+   its own. */
+const EMPTY_MAX_HEIGHT = 60;
+const RETRY_EMPTY_MS = 60000;
+const WAITING = new WeakMap();
+
+function showEmptyState(frame){
+  const box = frame.closest('.iframe-embed');
+  if (!box || WAITING.has(frame)) return;
+  /* Back to the height the section asked for: the sliver the chart just
+     reported is the thing being covered up, and the cover needs room. */
+  frame.style.height = (Number(frame.getAttribute('height')) || 400) + 'px';
+  box.classList.add('is-empty');
+  const placeholder = document.createElement('div');
+  placeholder.className = 'placeholder';
+  placeholder.textContent = box.dataset.emptyMsg || 'Awaiting data.';
+  box.appendChild(placeholder);
+  const timer = setInterval(() => {
+    if (!frame.isConnected) { clearInterval(timer); return; }
+    /* A hidden tab gets no repaint, so a reload there would buy nothing and
+       still cost the reader a round trip on wake. */
+    if (document.hidden) return;
+    const src = frame.src;
+    frame.src = 'about:blank';
+    setTimeout(() => { frame.src = src; }, 50);
+  }, RETRY_EMPTY_MS);
+  WAITING.set(frame, {placeholder, timer});
+}
+
+function clearEmptyState(frame){
+  const state = WAITING.get(frame);
+  if (!state) return;
+  clearInterval(state.timer);
+  state.placeholder.remove();
+  const box = frame.closest('.iframe-embed');
+  if (box) box.classList.remove('is-empty');
+  WAITING.delete(frame);
+}
+
 /* Datawrapper posts a new height as a chart grows; without this the iframe
    keeps its initial height and clips. Any origin can post here, so the sender
    must be one of this page's own iframes and the height a plausible number. */
@@ -1068,9 +1127,13 @@ window.addEventListener('message', e => {
     const h = Number(e.data['datawrapper-height'][key]);
     if (!Number.isFinite(h) || h <= 0 || h > 20000) continue;
     for (const frame of frames) {
-      if (frame.contentWindow === e.source) {
+      if (frame.contentWindow !== e.source) continue;
+      RENDERED.add(frame);
+      if (h <= EMPTY_MAX_HEIGHT) {
+        showEmptyState(frame);
+      } else {
+        clearEmptyState(frame);
         frame.style.height = h + 'px';
-        RENDERED.add(frame);
       }
     }
   }

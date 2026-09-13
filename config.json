@@ -169,6 +169,8 @@
       "heading": "Possible coalition combinations",
       "sub": "Combined seat total of viable coalition options, per the latest exit poll",
       "note": "Coalition arithmetic appears once the first exit poll is published at 20:00 CEST on 13 September 2026.",
+      "empty": "Awaiting the first exit poll.",
+      "_emptyComment": "Shown inside each card while the chart's tab has rows but no numbers in them. Datawrapper still renders such a chart, as a footer and nothing else, so without this the two cards collapse to a thirty-pixel sliver that reads as a broken embed. index.html swaps the chart back in by itself once the tab has figures.",
       "charts": [
         {
           "label": "SVT/VALU",
