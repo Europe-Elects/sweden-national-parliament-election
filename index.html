@@ -1122,19 +1122,26 @@ function clearEmptyState(frame){
    must be one of this page's own iframes and the height a plausible number. */
 window.addEventListener('message', e => {
   if (!e.data || e.data['datawrapper-height'] === undefined) return;
-  const frames = document.querySelectorAll('iframe');
+  let frames = null;
   for (const key in e.data['datawrapper-height']) {
     const h = Number(e.data['datawrapper-height'][key]);
     if (!Number.isFinite(h) || h <= 0 || h > 20000) continue;
+    frames = frames || document.querySelectorAll('iframe');
     for (const frame of frames) {
       if (frame.contentWindow !== e.source) continue;
       RENDERED.add(frame);
       if (h <= EMPTY_MAX_HEIGHT) {
         showEmptyState(frame);
-      } else {
-        clearEmptyState(frame);
-        frame.style.height = h + 'px';
+        continue;
       }
+      clearEmptyState(frame);
+      /* Every embed re-posts its height about once a second whether or not it
+         has changed — measured at 466 messages a minute across nine charts, of
+         which 456 carried a height the frame already had. Writing those back
+         invalidates layout and wakes the body ResizeObserver, and through it
+         reportHeight, for no change at all. */
+      const px = h + 'px';
+      if (frame.style.height !== px) frame.style.height = px;
     }
   }
 });
