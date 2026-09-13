@@ -118,14 +118,8 @@
     "extra": {}
   },
   "sections": {
-    "context": {
-      "label": "Context",
-      "open": false
-    },
-    "candidates": {
-      "label": "Lead Candidates",
-      "open": false
-    },
+    "context": null,
+    "candidates": null,
     "results": {
       "label": "Results",
       "heading": "All contesting parties",
@@ -283,15 +277,11 @@
       },
       "_note": "live: false on purpose, and the version is pinned. This chart is kept up to date independently of this page, so the pipeline must not republish it. National elections have a standing polling average; regional ones generally do not, which is why the template ships without this section."
     },
-    "polling": {
-      "label": "Pre-Election Polling",
-      "heading": "Sweden 2026 · Voting intention since the 2022 election",
-      "sub": "Individual polls published 2022–2026",
-      "yMax": null
-    },
+    "polling": null,
     "pollingHistory": null,
     "headToHead": null,
-    "records": {}
+    "records": {},
+    "_droppedNote": "context, candidates and polling are off for this election: the copy was not ready in time. Each is one line to restore — put the object back and fill the matching content/ file. The polling average chart (pollingAverage) stays, and is what covers polling for Sweden."
   },
   "automation": {
     "githubRepo": "Europe-Elects/sweden-national-parliament-election",
