@@ -449,7 +449,9 @@ RENDER.headToHead = (cfg, after, content) => {
 RENDER.coalitions = renderEmbedSection;
 
 RENDER.history = cfg => {
-  const items = (cfg.charts || []).filter(c => c && c.id && !/^TODO/i.test(c.id));
+  /* The section takes either one `chart` or a `charts` array, like every other
+     embed section. Reading only `charts` dropped the whole section silently. */
+  const items = (Array.isArray(cfg.charts) ? cfg.charts : [cfg.chart]).filter(c => c && c.id && !/^TODO/i.test(c.id));
   if (!items.length) return '';
   const inner = items.map(c => `<div class="card" style="margin-top:0;">
       ${has(c.label) ? `<div class="sub" style="margin-bottom:8px;font-weight:700;color:var(--text);">${esc(txt(c.label))}</div>` : ''}
@@ -1046,7 +1048,14 @@ async function boot(){
    frame — and the signal this page needs, because Datawrapper's own library
    gives up on fetching its dataset after five seconds and then renders
    nothing at all. A reader is left looking at a white rectangle with no
-   indication anything is wrong. */
+   indication anything is wrong.
+
+   The catch: Datawrapper posts that height only when it differs from the
+   iframe's own height, so a chart whose configured height happens to equal its
+   rendered height is silent even though it drew fine, and is torn down here as
+   a failure. That is what the _heightComment on demographicVote is about. If a
+   chart that plainly renders is being replaced by the placeholder below, its
+   height in config.json is the first thing to change. */
 const RENDERED = new WeakSet();
 
 /* Datawrapper posts a new height as a chart grows; without this the iframe

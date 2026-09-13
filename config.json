@@ -211,10 +211,11 @@
         "label": "2022 demographic vote",
         "id": "MLC5G",
         "version": 4,
-        "height": 521,
+        "height": 560,
         "ariaLabel": "Small multiple column chart",
         "live": false
       },
+      "_heightComment": "560, not 521. Datawrapper only posts a datawrapper-height message when the height differs from the iframe it is in, and 521 is exactly this chart's rendered height, so pinning 521 meant it never reported anything and the embed watchdog in index.html replaced a working chart with the timeout placeholder. Any value but the rendered height works; the page resizes to the reported 521 either way.",
       "_note": "Unlinked from its source spreadsheet on 12 September 2026 and given the same data as an upload, so readers no longer fetch Google for it. The data is the 2022 exit poll and does not change. To restore the link: Upload data -> Link external dataset -> https://docs.google.com/spreadsheets/d/1spbkeWm52y_fWQr-j_IYl7wYxjjHBeHVHEAEHzmmY9c/export?format=csv&gid=571805518"
     },
     "demographics": {
@@ -235,7 +236,7 @@
       "chart": {
         "label": "Turnout",
         "id": "xr5Oj",
-        "version": 6,
+        "version": 10,
         "height": 369,
         "ariaLabel": "Line chart",
         "live": true
