@@ -197,7 +197,7 @@
     "demographicSwing": {
       "label": "Demographic Swing",
       "heading": "Swing by demographic group",
-      "sub": "Change in vote share since 2022, by group, per the exit poll",
+      "sub": "Change in vote share since 2022, by group, per pre-election polling",
       "note": null,
       "chart": {
         "label": "Demographic swing",
