@@ -1,6 +1,6 @@
 {
-  "updated": "2026-09-13T18:08:21.531Z",
-  "published": false,
+  "updated": "2026-09-13T18:08:58.304Z",
+  "published": true,
   "header": [
     "STV/VALU exit poll (self-commissioned)",
     "S",
@@ -20,9 +20,9 @@
       "62",
       "24",
       "32",
-      "",
-      "",
-      ""
+      "21",
+      "25",
+      "18"
     ]
   ]
 }
